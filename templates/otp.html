@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify OTP</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='app_theme.css') }}">
+    <style>
+        .otp-input{
+            text-align:center;
+            font-size:22px;
+            font-weight:800;
+            letter-spacing:8px;
+        }
+    </style>
+</head>
+<body>
+<main class="app-shell">
+    <aside class="side-panel">
+        <div class="brand-mark">
+            <div class="brand-logo"><i class="fa-solid fa-shield-halved"></i></div>
+            <div><strong>Verification</strong><span>Second step</span></div>
+        </div>
+        <div class="side-copy">
+            <h1>OTP verification</h1>
+            {% if otp_email %}
+            <p>Enter the code sent to your registered email {{ otp_email }}.</p>
+            {% else %}
+            <p>Enter the code sent to your registered email.</p>
+            {% endif %}
+        </div>
+        <div class="feature-list">
+            <div class="feature-pill"><i class="fa-solid fa-envelope"></i>Email OTP</div>
+            <div class="feature-pill"><i class="fa-solid fa-clock"></i>Use latest code</div>
+            <div class="feature-pill"><i class="fa-solid fa-lock"></i>Secure session after verify</div>
+        </div>
+    </aside>
+
+    <section class="content-panel centered">
+        <div class="page-head">
+            <div>
+                <div class="badge"><i class="fa-solid fa-key"></i> OTP Required</div>
+                <h2>Verify code</h2>
+                <p>Type the 6 digit OTP to continue to your dashboard.</p>
+            </div>
+        </div>
+
+        {% if otp_message %}
+        <div class="message success">{{ otp_message }}</div>
+        {% endif %}
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="message {{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <form action="/verify_otp" method="POST" autocomplete="off">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+            <div class="field">
+                <label for="otp">OTP Code</label>
+                <input class="otp-input" id="otp" type="text" name="otp" placeholder="000000" maxlength="6" inputmode="numeric" required>
+            </div>
+            <button class="btn" type="submit"><i class="fa-solid fa-circle-check"></i>Verify OTP</button>
+        </form>
+
+        <form action="/resend_otp" method="POST" style="margin-top:16px;">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+            <button class="btn secondary" type="submit"><i class="fa-solid fa-rotate"></i>Resend code</button>
+        </form>
+        <a class="btn secondary" style="margin-top:12px;" href="/login"><i class="fa-solid fa-arrow-left"></i>Back to login</a>
+    </section>
+</main>
+
+<script>
+const otp = document.getElementById("otp");
+if(otp){
+    otp.addEventListener("input", function(){
+        this.value = this.value.replace(/\D/g, "").slice(0, 6);
+    });
+}
+</script>
+</body>
+</html>

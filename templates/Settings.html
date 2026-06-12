@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='app_theme.css') }}">
+    <style>
+        .range-line{
+            display:grid;
+            gap:8px;
+            margin-bottom:14px;
+        }
+        input[type="range"]{
+            min-height:0;
+            padding:0;
+            accent-color:#2563eb;
+        }
+        .form-error{
+            display:none;
+            margin:0 0 12px;
+            padding:10px 12px;
+            border:1px solid #fecaca;
+            border-radius:8px;
+            background:#fef2f2;
+            color:#b91c1c;
+            font-size:13px;
+            font-weight:700;
+        }
+        .btn:disabled{
+            opacity:0.55;
+            cursor:not-allowed;
+            transform:none;
+            box-shadow:none;
+        }
+    </style>
+</head>
+<body>
+<main class="app-shell wide">
+    <aside class="side-panel">
+        <div class="brand-mark">
+            <div class="brand-logo"><i class="fa-solid fa-gear"></i></div>
+            <div><strong>Settings</strong><span>Account preferences</span></div>
+        </div>
+        <div class="side-copy">
+            <h1>Control center</h1>
+            <p>Manage your profile, password, appearance preferences, and navigation from one focused page.</p>
+        </div>
+        <div class="feature-list">
+            <div class="feature-pill"><i class="fa-solid fa-user"></i>{{ session.get('username') or 'User' }}</div>
+            <div class="feature-pill"><i class="fa-solid fa-palette"></i>Saved appearance</div>
+            <div class="feature-pill"><i class="fa-solid fa-lock"></i>Password validation</div>
+        </div>
+    </aside>
+
+    <section class="content-panel">
+        <div class="page-head">
+            <div>
+                <div class="badge"><i class="fa-solid fa-sliders"></i> Preferences</div>
+                <h2>Settings</h2>
+                <p>Adjust account details and app comfort settings.</p>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="card white">
+                <h3><i class="fa-solid fa-circle-info"></i> Account</h3>
+                <p>Logged in as <b>{{ session.get('username') or 'User' }}</b></p>
+            </div>
+
+            <div class="card white">
+                <h3><i class="fa-solid fa-palette"></i> Appearance</h3>
+                <div class="range-line">
+                    <label for="fontSizeRange">Font size: <b id="fontSizeValue">100%</b></label>
+                    <input id="fontSizeRange" type="range" min="80" max="120" step="1" value="100">
+                    <p class="muted">Adjust text size for better readability.</p>
+                </div>
+                <div class="range-line">
+                    <label for="brightnessRange">Brightness: <b id="brightnessValue">100%</b></label>
+                    <input id="brightnessRange" type="range" min="70" max="130" step="1" value="100">
+                    <p class="muted">Adjust overall page brightness.</p>
+                </div>
+                <button id="resetAppearanceBtn" class="btn secondary" type="button"><i class="fa-solid fa-rotate-left"></i>Reset appearance</button>
+            </div>
+
+            <div class="card white">
+                <h3><i class="fa-solid fa-user-pen"></i> Update Profile</h3>
+                <form action="/update_profile" method="POST">
+                    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                    <div class="field">
+                        <label>New Username</label>
+                        <div class="input-wrap"><i class="fa-solid fa-user"></i><input type="text" name="username" value="{{ username or session.get('username') or '' }}" placeholder="New username" maxlength="100" required></div>
+                    </div>
+                    <div class="field">
+                        <label>Registered Email</label>
+                        <div class="input-wrap"><i class="fa-solid fa-envelope"></i><input type="email" name="email" value="{{ email or '' }}" placeholder="Email for OTP" maxlength="150" required></div>
+                    </div>
+                    <div class="field">
+                        <label>Profile Image Name</label>
+                        <select name="profile_pic" required>
+                            {% for image in profile_images %}
+                            <option value="{{ image }}" {% if image == profile_pic %}selected{% endif %}>{{ image }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button class="btn" type="submit"><i class="fa-solid fa-floppy-disk"></i>Update profile</button>
+                </form>
+            </div>
+
+            <div class="card white">
+                <h3><i class="fa-solid fa-lock"></i> Change Password</h3>
+                <form id="changePasswordForm" action="/change_password" method="POST">
+                    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                    <div class="field">
+                        <label>Old Password</label>
+                        <div class="input-wrap"><i class="fa-solid fa-key"></i><input type="password" name="old_password" placeholder="Old password" required></div>
+                    </div>
+                    <div class="field">
+                        <label>New Password</label>
+                        <div class="input-wrap"><i class="fa-solid fa-lock"></i><input id="newPassword" type="password" name="new_password" placeholder="New password" minlength="6" required></div>
+                    </div>
+                    <div class="field">
+                        <label>Re-enter Password</label>
+                        <div class="input-wrap"><i class="fa-solid fa-check"></i><input id="rePassword" type="password" name="re_password" placeholder="Re-enter password" minlength="6" required></div>
+                    </div>
+                    <div id="pwError" class="form-error">New Password and Re-Enter Password must match.</div>
+                    <button id="changePwSubmit" class="btn" type="submit" disabled><i class="fa-solid fa-shield"></i>Change password</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="action-grid three" style="margin-top:16px;">
+            <a href="/dashboard" class="btn secondary"><i class="fa-solid fa-house"></i>Dashboard</a>
+            <a href="/profile" class="btn secondary"><i class="fa-solid fa-user"></i>Profile</a>
+            <a href="/activity_logs" class="btn secondary"><i class="fa-solid fa-clock-rotate-left"></i>Activity</a>
+            <a href="/report_history" class="btn secondary"><i class="fa-solid fa-file-excel"></i>Reports</a>
+            {% if session.get('role') == 'admin' %}
+            <a href="/admin/users" class="btn secondary"><i class="fa-solid fa-users-gear"></i>Users</a>
+            {% endif %}
+            <a href="/logout" class="btn danger"><i class="fa-solid fa-right-from-bracket"></i>Logout</a>
+        </div>
+    </section>
+</main>
+
+<button class="global-back-button" type="button" onclick="goBack()">
+    <span aria-hidden="true">&larr;</span>
+    Back
+</button>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+<div class="global-flash-stack" aria-live="polite">
+    {% for category, message in messages %}
+    <div class="global-flash {{ category }}">{{ message }}</div>
+    {% endfor %}
+</div>
+{% endif %}
+{% endwith %}
+
+{% if session.get('logged_in') %}
+<div class="global-quick-panel" aria-label="Quick tools">
+    <div class="global-clock" id="globalClock">--:--</div>
+    <button class="global-tool-button" type="button" onclick="goDashboard()">Home</button>
+    <button class="global-tool-button" type="button" onclick="goSqlPage()">SQL</button>
+    <button class="global-tool-button" type="button" onclick="scrollToTop()">Top</button>
+    <button class="global-tool-button" type="button" onclick="togglePageFocus()">Focus</button>
+</div>
+{% endif %}
+
+<style>
+    /* ===== Global Appearance (applies across pages) ===== */
+    :root{
+        --app-font-scale: 1;
+        --app-brightness: 1;
+    }
+
+    body{
+        font-size: calc(16px * var(--app-font-scale));
+        filter: brightness(var(--app-brightness));
+    }
+
+    .global-back-button {
+        position: fixed;
+        top: 18px;
+        left: 18px;
+        z-index: 9999;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        width: auto;
+        min-width: 88px;
+        padding: 10px 14px;
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        border-radius: 8px;
+        background: rgba(18, 25, 38, 0.78);
+        color: #fff;
+        font: 600 14px 'Segoe UI', Arial, sans-serif;
+        line-height: 1;
+        text-decoration: none;
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+        backdrop-filter: blur(10px);
+        cursor: pointer;
+        transition: background 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
+        will-change: transform;
+    }
+
+    .global-back-button:hover {
+        background: #ff7a00;
+        transform: translateY(-1px);
+    }
+
+    .global-back-button span {
+        font-size: 13px;
+    }
+
+    .global-quick-panel {
+        position: fixed;
+        top: 18px;
+        right: 18px;
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.20);
+        border-radius: 8px;
+        background: rgba(18, 25, 38, 0.78);
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+        backdrop-filter: blur(12px);
+        transition: box-shadow 0.25s ease, border-color 0.25s ease;
+    }
+
+    .global-flash-stack {
+        position: fixed;
+        top: 74px;
+        right: 18px;
+        z-index: 10000;
+        display: grid;
+        gap: 8px;
+        width: min(380px, calc(100vw - 36px));
+    }
+
+    .global-flash {
+        padding: 12px 14px;
+        border: 1px solid rgba(255, 255, 255, 0.24);
+        border-radius: 8px;
+        background: rgba(18, 25, 38, 0.92);
+        color: #fff;
+        font: 700 13px 'Segoe UI', Arial, sans-serif;
+        line-height: 1.35;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.28);
+        backdrop-filter: blur(12px);
+    }
+
+    .global-flash.success {
+        background: rgba(5, 150, 105, 0.95);
+    }
+
+    .global-flash.error,
+    .global-flash.danger {
+        background: rgba(220, 38, 38, 0.95);
+    }
+
+    .global-flash.warning {
+        background: rgba(217, 119, 6, 0.95);
+    }
+
+    .global-clock {
+        min-width: 62px;
+        color: #fff;
+        font: 700 13px 'Segoe UI', Arial, sans-serif;
+        text-align: center;
+        letter-spacing: 0;
+    }
+
+    .global-tool-button {
+        width: auto;
+        min-width: 48px;
+        padding: 9px 10px;
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+        font: 700 12px 'Segoe UI', Arial, sans-serif;
+        line-height: 1;
+        cursor: pointer;
+        transition: background 0.2s, transform 0.2s;
+    }
+
+    .global-tool-button:hover {
+        background: #2563eb;
+        transform: translateY(-1px);
+    }
+
+    body.global-focus-mode::before {
+        background: rgba(0, 0, 0, 0.78) !important;
+    }
+
+    body.global-focus-mode .main-container {
+        box-shadow: 0 18px 70px rgba(0, 176, 255, 0.28) !important;
+    }
+
+    @media (max-width: 600px) {
+        .global-back-button {
+            top: 10px;
+            left: 10px;
+            min-width: 78px;
+            padding: 9px 11px;
+            font-size: 13px;
+        }
+
+        .global-quick-panel {
+            top: auto;
+            right: 10px;
+            bottom: 10px;
+            left: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .global-flash-stack {
+            top: 58px;
+            right: 10px;
+            left: 10px;
+            width: auto;
+        }
+
+        .global-clock {
+            width: 100%;
+        }
+    }
+</style>
+
+<script>
+    function goBack() {
+        if (window.history.length > 1) {
+            window.history.back();
+            return;
+        }
+
+        window.location.href = "/dashboard";
+    }
+
+    function goDashboard() {
+        window.location.href = "/dashboard";
+    }
+
+    function goSqlPage() {
+        window.location.href = "/sql";
+    }
+
+    function scrollToTop() {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+
+        const scrollBox = document.querySelector(".right");
+        if (scrollBox) {
+            scrollBox.scrollTo({ top: 0, behavior: "smooth" });
+        }
+    }
+
+    function togglePageFocus() {
+        document.body.classList.toggle("global-focus-mode");
+        localStorage.setItem(
+            "globalFocusMode",
+            document.body.classList.contains("global-focus-mode") ? "1" : "0"
+        );
+    }
+
+    function updateGlobalClock() {
+        const clock = document.getElementById("globalClock");
+        if (!clock) {
+            return;
+        }
+
+        const now = new Date();
+        clock.innerText = now.toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit"
+        });
+    }
+
+    // ===== Global appearance apply from localStorage =====
+    (function applySavedAppearance() {
+        const savedFont = localStorage.getItem("settings_font_percent");
+        const savedBrightness = localStorage.getItem("settings_brightness_percent");
+
+        const initialFont = savedFont ? Number(savedFont) : 100;
+        const initialBrightness = savedBrightness ? Number(savedBrightness) : 100;
+
+        const fontScale = initialFont / 100;
+        const brightness = initialBrightness / 100;
+
+        document.documentElement.style.setProperty("--app-font-scale", String(fontScale));
+        document.documentElement.style.setProperty("--app-brightness", String(brightness));
+
+        // Settings page ka UI label update yahan zaroori nahi (sirf apply)
+    })();
+
+    if (localStorage.getItem("globalFocusMode") === "1") {
+        document.body.classList.add("global-focus-mode");
+    }
+
+    updateGlobalClock();
+    setInterval(updateGlobalClock, 30000);
+</script>
+
+
+<script>
+(function(){
+    const fontSizeRange = document.getElementById("fontSizeRange");
+    const brightnessRange = document.getElementById("brightnessRange");
+    const fontSizeValue = document.getElementById("fontSizeValue");
+    const brightnessValue = document.getElementById("brightnessValue");
+    const resetAppearanceBtn = document.getElementById("resetAppearanceBtn");
+
+    function applyAppearance(fontPercent, brightnessPercent){
+        document.documentElement.style.setProperty("--app-font-scale", String(fontPercent / 100));
+        document.documentElement.style.setProperty("--app-brightness", String(brightnessPercent / 100));
+        if(fontSizeValue) fontSizeValue.textContent = fontPercent + "%";
+        if(brightnessValue) brightnessValue.textContent = brightnessPercent + "%";
+    }
+
+    if(fontSizeRange && brightnessRange){
+        const savedFont = Number(localStorage.getItem("settings_font_percent") || 100);
+        const savedBrightness = Number(localStorage.getItem("settings_brightness_percent") || 100);
+        fontSizeRange.value = savedFont;
+        brightnessRange.value = savedBrightness;
+        applyAppearance(savedFont, savedBrightness);
+
+        fontSizeRange.addEventListener("input", function(){
+            applyAppearance(Number(fontSizeRange.value), Number(brightnessRange.value));
+        });
+        brightnessRange.addEventListener("input", function(){
+            applyAppearance(Number(fontSizeRange.value), Number(brightnessRange.value));
+        });
+        fontSizeRange.addEventListener("change", function(){
+            localStorage.setItem("settings_font_percent", fontSizeRange.value);
+        });
+        brightnessRange.addEventListener("change", function(){
+            localStorage.setItem("settings_brightness_percent", brightnessRange.value);
+        });
+        resetAppearanceBtn.addEventListener("click", function(){
+            fontSizeRange.value = "100";
+            brightnessRange.value = "100";
+            localStorage.setItem("settings_font_percent", "100");
+            localStorage.setItem("settings_brightness_percent", "100");
+            applyAppearance(100, 100);
+        });
+    }
+
+    const form = document.getElementById("changePasswordForm");
+    const newPassword = document.getElementById("newPassword");
+    const rePassword = document.getElementById("rePassword");
+    const pwError = document.getElementById("pwError");
+    const submitBtn = document.getElementById("changePwSubmit");
+
+    function validatePassword(){
+        const ok = newPassword.value.length > 0 && rePassword.value.length > 0 && newPassword.value === rePassword.value;
+        pwError.style.display = ok || (!newPassword.value && !rePassword.value) ? "none" : "block";
+        submitBtn.disabled = !ok;
+        return ok;
+    }
+
+    if(form){
+        newPassword.addEventListener("input", validatePassword);
+        rePassword.addEventListener("input", validatePassword);
+        form.addEventListener("submit", function(e){
+            if(!validatePassword()) e.preventDefault();
+        });
+    }
+})();
+</script>
+</body>
+</html>

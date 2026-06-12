@@ -1,0 +1,2068 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQL Runner</title>
+
+    <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <style>
+
+        :root{
+            --surface:#f6f8fb;
+            --panel:#ffffff;
+            --panel-soft:#eef3f8;
+            --text:#1d2733;
+            --muted:#647282;
+            --line:#d8e0ea;
+            --primary:#2563eb;
+            --primary-dark:#1d4ed8;
+            --green:#059669;
+            --green-dark:#047857;
+            --orange:#d97706;
+            --red:#dc2626;
+            --violet:#7c3aed;
+            --cyan:#0891b2;
+        }
+
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+            font-family:"Segoe UI", Arial, sans-serif;
+            letter-spacing:0;
+        }
+
+        body{
+            min-height:100vh;
+            background:
+                linear-gradient(120deg, rgba(10,18,32,0.78), rgba(20,24,34,0.58)),
+                url("{{ url_for('static', filename='Images/login3.jpg') }}");
+            background-size:cover;
+            background-position:center;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            padding:18px;
+            color:var(--text);
+            overflow:hidden;
+        }
+
+        .main-container{
+            width:min(1280px, 100%);
+            height:min(94vh, 920px);
+            display:grid;
+            grid-template-columns:260px minmax(0,1fr);
+            overflow:hidden;
+            border:1px solid rgba(255,255,255,0.28);
+            border-radius:8px;
+            background:var(--surface);
+            box-shadow:0 24px 70px rgba(0,0,0,0.42);
+        }
+
+        .left{
+            background:#121926;
+            color:white;
+            padding:28px 22px;
+            border-right:1px solid rgba(255,255,255,0.08);
+            display:flex;
+            flex-direction:column;
+            gap:22px;
+        }
+
+        .brand{
+            display:flex;
+            align-items:center;
+            gap:12px;
+        }
+
+        .logo{
+            width:46px;
+            height:46px;
+            border-radius:8px;
+            background:#2563eb;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            font-size:22px;
+            flex:0 0 auto;
+        }
+
+        .left h1{
+            font-size:22px;
+            line-height:28px;
+            font-weight:800;
+        }
+
+        .left p{
+            color:#aeb9c7;
+            line-height:22px;
+            font-size:13px;
+        }
+
+        .left > .logo,
+        .left > h1,
+        .left > p{
+            display:none;
+        }
+
+        .side-status{
+            margin-top:auto;
+            display:grid;
+            gap:10px;
+        }
+
+        .status-pill{
+            display:flex;
+            align-items:center;
+            gap:10px;
+            min-height:42px;
+            padding:10px 12px;
+            border:1px solid rgba(255,255,255,0.1);
+            border-radius:8px;
+            background:rgba(255,255,255,0.06);
+            color:#d8dee8;
+            font-size:13px;
+        }
+
+        .status-pill i{
+            color:#60a5fa;
+            width:16px;
+            text-align:center;
+        }
+
+        .right{
+            min-width:0;
+            overflow-y:auto;
+            padding:24px;
+        }
+
+        .title{
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            gap:16px;
+            margin-bottom:18px;
+        }
+
+        .title h2{
+            color:var(--text);
+            font-size:26px;
+            line-height:32px;
+            font-weight:800;
+        }
+
+        .title span{
+            color:var(--muted);
+            font-size:13px;
+        }
+
+        .section{
+            margin-bottom:16px;
+            padding:16px;
+            border:1px solid var(--line);
+            border-radius:8px;
+            background:var(--panel);
+        }
+
+        .section-title{
+            display:flex;
+            align-items:center;
+            gap:9px;
+            margin:18px 0 12px;
+            color:var(--text);
+            font-size:15px;
+            font-weight:800;
+        }
+
+        form > .section-title:first-child{
+            margin-top:0;
+        }
+
+        .section-title i{
+            color:var(--primary);
+        }
+
+        .grid{
+            display:grid;
+            grid-template-columns:repeat(3,minmax(0,1fr));
+            gap:12px;
+            margin-bottom:12px;
+        }
+
+        .grid:last-child{
+            margin-bottom:0;
+        }
+
+        select,
+        textarea,
+        input{
+            width:100%;
+            min-height:44px;
+            border:1px solid var(--line);
+            outline:none;
+            padding:11px 12px;
+            border-radius:8px;
+            background:#fff;
+            color:var(--text);
+            font-size:14px;
+            transition:border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+        }
+
+        select:focus,
+        textarea:focus,
+        input:focus{
+            border-color:var(--primary);
+            box-shadow:0 0 0 3px rgba(37,99,235,0.14);
+        }
+
+        select option{
+            background:#fff;
+            color:var(--text);
+        }
+
+        textarea{
+            resize:vertical;
+            min-height:112px;
+            line-height:20px;
+            font-family:Consolas, "Courier New", monospace;
+        }
+
+        .btn-group{
+            display:grid;
+            grid-template-columns:repeat(3,minmax(0,1fr));
+            gap:12px;
+            margin-top:14px;
+        }
+
+        .toolbar{
+            margin-top:0;
+            margin-bottom:16px;
+        }
+
+        a{
+            text-decoration:none;
+        }
+
+        button{
+            width:100%;
+            min-height:44px;
+            border:none;
+            padding:11px 13px;
+            border-radius:8px;
+            color:white;
+            font-size:14px;
+            cursor:pointer;
+            font-weight:700;
+            transition:background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        button:hover{
+            transform:translateY(-1px);
+            box-shadow:0 8px 18px rgba(15,23,42,0.16);
+        }
+
+        button i{
+            margin-right:7px;
+        }
+
+        .run-btn{
+            background:var(--green);
+        }
+
+        .run-btn:hover{
+            background:var(--green-dark);
+        }
+
+        .excel-btn{
+            background:var(--primary);
+        }
+
+        .excel-btn:hover{
+            background:var(--primary-dark);
+        }
+
+        .clear-btn{
+            background:var(--red);
+        }
+
+        .clear-btn:hover{
+            background:#b91c1c;
+        }
+
+        .dpd-btn{
+            background:var(--violet);
+        }
+
+        .dpd-btn:hover{
+            background:#6d28d9;
+        }
+
+        .sidbi-panel{
+            margin:0 0 16px;
+            padding:16px;
+            border:1px solid var(--line);
+            border-radius:8px;
+            background:var(--panel);
+        }
+
+        .sidbi-header{
+            display:flex;
+            justify-content:space-between;
+            align-items:flex-start;
+            gap:12px;
+            margin-bottom:12px;
+        }
+
+        .sidbi-header h3{
+            color:var(--text);
+            font-size:15px;
+            line-height:21px;
+        }
+
+        .sidbi-header span{
+            display:block;
+            margin-top:2px;
+            font-size:12px;
+            font-weight:500;
+            color:var(--muted);
+        }
+
+        .sidbi-actions{
+            display:grid;
+            grid-template-columns:repeat(4,minmax(0,1fr));
+            gap:10px;
+            margin-top:12px;
+        }
+
+        .dpd-table-row{
+            display:grid;
+            grid-template-columns:1fr 1fr;
+            gap:10px;
+        }
+
+        .sidbi-actions button{
+            position:relative;
+            overflow:hidden;
+            min-height:46px;
+            padding:10px;
+            font-size:13px;
+            line-height:18px;
+        }
+
+        .sidbi-run-all{
+            background:var(--cyan);
+        }
+
+        .sidbi-run-all:hover{
+            background:#0e7490;
+        }
+
+        .sidbi-button-text{
+            position:relative;
+            z-index:2;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            gap:7px;
+        }
+
+        .sidbi-button-text i{
+            margin-right:0;
+        }
+
+        .sidbi-button-progress{
+            position:absolute;
+            inset:0;
+            z-index:1;
+            width:0%;
+            background:linear-gradient(90deg,#10b981,#2563eb,#7c3aed);
+            opacity:0;
+            transition:width 0.35s ease, opacity 0.2s ease;
+        }
+
+        .sidbi-progress-percent{
+            position:relative;
+            z-index:2;
+            display:none;
+            margin-left:4px;
+            color:#fff;
+        }
+
+        .sidbi-progress-running{
+            background:#111827 !important;
+            box-shadow:0 8px 20px rgba(37,99,235,0.26);
+        }
+
+        .sidbi-progress-running .sidbi-button-progress{
+            opacity:0.9;
+        }
+
+        .sidbi-progress-running .sidbi-progress-percent{
+            display:inline;
+        }
+
+        .mini-tools{
+            display:grid;
+            grid-template-columns:repeat(3,minmax(0,1fr));
+            gap:10px;
+            margin:10px 0 14px;
+        }
+
+        .mini-tools button,
+        .mini-tools a button{
+            min-height:40px;
+            padding:9px 10px;
+            font-size:12px;
+        }
+
+        .meta-grid{
+            display:grid;
+            grid-template-columns:repeat(4,minmax(0,1fr));
+            gap:10px;
+            margin-bottom:16px;
+        }
+
+        .meta-card{
+            padding:11px 12px;
+            border:1px solid var(--line);
+            border-radius:8px;
+            background:var(--panel-soft);
+            font-size:12px;
+            color:var(--muted);
+        }
+
+        .meta-card strong{
+            display:block;
+            color:var(--text);
+            margin-bottom:3px;
+        }
+
+        .result-tools{
+            display:grid;
+            grid-template-columns:1fr repeat(4, minmax(110px, auto));
+            gap:10px;
+            align-items:center;
+            margin:10px 0;
+        }
+
+        .column-toggle-list{
+            display:none;
+            grid-template-columns:repeat(3,minmax(0,1fr));
+            gap:8px;
+            margin:10px 0;
+            padding:12px;
+            border:1px solid var(--line);
+            border-radius:8px;
+            background:var(--panel-soft);
+        }
+
+        .column-toggle-list label{
+            display:flex;
+            align-items:center;
+            gap:7px;
+            font-size:12px;
+            color:var(--text);
+        }
+
+        .column-toggle-list input{
+            width:auto;
+            min-height:auto;
+        }
+
+        .copy-btn{
+            background:var(--orange);
+            color:white;
+        }
+
+        .copy-btn:hover{
+            background:#b45309;
+        }
+
+        .progress-panel{
+            display:none;
+            margin-bottom:16px;
+            padding:13px 14px;
+            border:1px solid #bfdbfe;
+            border-radius:8px;
+            background:#eff6ff;
+        }
+
+        .progress-info{
+            display:flex;
+            justify-content:space-between;
+            gap:12px;
+            margin-bottom:9px;
+            font-size:13px;
+            color:#1e3a8a;
+        }
+
+        .progress-track{
+            width:100%;
+            height:9px;
+            overflow:hidden;
+            border-radius:999px;
+            background:#dbeafe;
+        }
+
+        .progress-fill{
+            width:0%;
+            height:100%;
+            border-radius:999px;
+            background:linear-gradient(90deg,#059669,#2563eb);
+            transition:width 0.35s ease;
+        }
+
+        .query-history{
+            margin:12px 0 0;
+            padding:12px;
+            border:1px solid var(--line);
+            border-radius:8px;
+            background:var(--panel-soft);
+        }
+
+        .query-history-title{
+            margin-bottom:9px;
+            font-size:13px;
+            font-weight:800;
+            color:var(--text);
+        }
+
+        .query-history-list{
+            display:grid;
+            grid-template-columns:repeat(2,minmax(0,1fr));
+            gap:8px;
+        }
+
+        .history-query{
+            min-height:38px;
+            padding:9px 10px;
+            overflow:hidden;
+            border:1px solid var(--line);
+            border-radius:8px;
+            background:#fff;
+            color:var(--text);
+            font-size:12px;
+            line-height:17px;
+            text-align:left;
+            text-overflow:ellipsis;
+            white-space:nowrap;
+        }
+
+        .history-query:hover{
+            background:#e0f2fe;
+            color:#075985;
+            box-shadow:none;
+        }
+
+        .table-wrapper{
+            margin-top:12px;
+            max-height:360px;
+            overflow:auto;
+            border:1px solid var(--line);
+            border-radius:8px;
+            background:white;
+        }
+
+        table{
+            width:100%;
+            border-collapse:separate;
+            border-spacing:0;
+            color:var(--text);
+        }
+
+        th{
+            background:#1f2937;
+            color:white;
+            position:sticky;
+            top:0;
+            z-index:10;
+        }
+
+        th,td{
+            padding:10px 12px;
+            border-bottom:1px solid #e5e7eb;
+            border-right:1px solid #e5e7eb;
+            font-size:13px;
+            text-align:left;
+            vertical-align:top;
+        }
+
+        tr:nth-child(even){
+            background:#f9fafb;
+        }
+
+        .error,
+        .success{
+            padding:12px 14px;
+            border-radius:8px;
+            margin:0 0 16px;
+            font-size:14px;
+            font-weight:600;
+        }
+
+        .error{
+            background:#fef2f2;
+            color:#b91c1c;
+            border:1px solid #fecaca;
+        }
+
+        .success{
+            background:#ecfdf5;
+            color:#065f46;
+            border:1px solid #a7f3d0;
+        }
+
+        #suggestions{
+            background:white;
+            color:var(--text);
+            border:1px solid var(--line);
+            border-radius:8px;
+            margin-top:6px;
+            max-height:150px;
+            overflow:auto;
+            display:none;
+            box-shadow:0 12px 24px rgba(15,23,42,0.12);
+        }
+
+        #suggestions div{
+            padding:9px 11px;
+            cursor:pointer;
+            border-bottom:1px solid #eef2f7;
+            font-size:13px;
+        }
+
+        #suggestions div:hover{
+            background:#eff6ff;
+        }
+
+        @media(max-width:1000px){
+            body{
+                align-items:flex-start;
+                overflow:auto;
+            }
+
+            .main-container{
+                grid-template-columns:1fr;
+                height:auto;
+                min-height:calc(100vh - 36px);
+            }
+
+            .left{
+                min-height:auto;
+                padding:18px;
+            }
+
+            .side-status{
+                margin-top:0;
+                grid-template-columns:repeat(3,minmax(0,1fr));
+            }
+
+            .right{
+                padding:18px;
+            }
+
+            .title{
+                display:block;
+            }
+
+            .grid,
+            .btn-group,
+            .mini-tools,
+            .meta-grid,
+            .result-tools,
+            .column-toggle-list,
+            .sidbi-actions,
+            .dpd-table-row,
+            .query-history-list{
+                grid-template-columns:1fr;
+            }
+        }
+
+        @media(max-width:640px){
+            body{
+                padding:0;
+            }
+
+            .main-container{
+                border-radius:0;
+                min-height:100vh;
+            }
+
+            .side-status{
+                grid-template-columns:1fr;
+            }
+        }
+
+    </style>
+</head>
+
+<body>
+
+<div class="main-container">
+
+    <!-- LEFT -->
+    <div class="left">
+
+        <div class="brand">
+            <div class="logo">
+                <i class="fas fa-database"></i>
+            </div>
+            <div>
+                <h1>SQL Runner</h1>
+                <p>Query workspace</p>
+            </div>
+        </div>
+
+        <div class="side-status">
+            <div class="status-pill">
+                <i class="fas fa-server"></i>
+                <span>{{ selected_server or 'Server not selected' }}</span>
+            </div>
+            <div class="status-pill">
+                <i class="fas fa-layer-group"></i>
+                <span>{{ selected_database or 'Database not selected' }}</span>
+            </div>
+            <div class="status-pill">
+                <i class="fas fa-table"></i>
+                <span>{{ selected_table or 'Table not selected' }}</span>
+            </div>
+        </div>
+
+        <div class="logo">
+            <i class="fas fa-database"></i>
+        </div>
+
+        <h1>SQL Runner</h1>
+
+        <p>
+            Dynamic SQL Runner<br>
+            Execute Queries<br>
+            Export Excel Reports<br>
+            Multi Query Support ðŸš€
+        </p>
+
+    </div>
+
+    <!-- RIGHT -->
+    <div class="right">
+
+        <div class="title">
+            <div>
+                <h2>SQL Runner Dashboard</h2>
+                <span>Connect, run queries, and prepare reports</span>
+            </div>
+        </div>
+
+        {% if connection_status %}
+        <div class="meta-grid">
+            <div class="meta-card"><strong>Server</strong>{{ connection_status.server }}</div>
+            <div class="meta-card"><strong>Database</strong>{{ connection_status.database }}</div>
+            <div class="meta-card"><strong>Tables</strong>{{ connection_status.tables_count }}</div>
+            <div class="meta-card"><strong>User</strong>{{ connection_status.user }}</div>
+        </div>
+        {% endif %}
+
+        <div id="progressPanel" class="progress-panel">
+            <div class="progress-info">
+                <span id="progressText">Running SQL...</span>
+                <strong id="progressPercent">0%</strong>
+            </div>
+            <div class="progress-track">
+                <div id="progressFill" class="progress-fill"></div>
+            </div>
+        </div>
+
+        <form id="sqlForm" method="POST">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+
+            <div class="section-title">
+                <i class="fas fa-plug"></i>
+                Connection
+            </div>
+
+            <!-- SERVER + CONNECT + DATABASE -->
+            <div class="grid">
+
+                <!-- SERVER -->
+                <select name="server">
+
+                    <option value="">-- Select Server --</option>
+
+                    {% for s in servers %}
+                    <option value="{{ s }}"
+                    {% if selected_server == s %}selected{% endif %}>
+                        {{ s }}
+                    </option>
+                    {% endfor %}
+
+                </select>
+
+                <!-- CONNECT -->
+                <button
+                    type="submit"
+                    name="action"
+                    value="connect_server"
+                    class="run-btn">
+
+                    ðŸ”Œ Connect Server
+
+                </button>
+
+                <!-- DATABASE -->
+                <select
+                    name="database"
+                    onchange="startSqlProgress('Loading database tables...'); this.form.submit()">
+
+                    <option value="">-- Select Database --</option>
+
+                    {% for db in databases %}
+                    <option value="{{ db }}"
+                    {% if selected_database == db %}selected{% endif %}>
+                        {{ db }}
+                    </option>
+                    {% endfor %}
+
+                </select>
+
+            </div>
+
+            <div class="grid">
+
+                <input
+                type="text"
+                name="uid"
+                value="{{ selected_uid or '' }}"
+                placeholder="SQL User ID">
+
+                <input
+                type="password"
+                name="pwd"
+                value="{{ selected_pwd or '' }}"
+                placeholder="SQL Password">
+
+                <button
+                    type="submit"
+                    name="action"
+                    value="connect_server"
+                    class="run-btn">
+                    Connect With Login
+                </button>
+
+            </div>
+
+            <div class="section-title">
+                <i class="fas fa-code"></i>
+                Query Editor
+            </div>
+
+            <!-- TABLE -->
+            <div class="grid">
+
+                <select name="table" id="tableSelect">
+
+                    <option value="">-- Select Table --</option>
+
+                    {% for t in tables %}
+                    <option value="{{ t }}"
+                    {% if selected_table == t %}selected{% endif %}>
+                        {{ t }}
+                    </option>
+                    {% endfor %}
+
+                </select>
+
+            </div>
+
+            <div class="mini-tools">
+                <button type="submit" name="action" value="preview_table" class="run-btn">
+                    <i class="fas fa-eye"></i>Preview Top 100
+                </button>
+                <button type="submit" name="action" value="show_columns" class="excel-btn">
+                    <i class="fas fa-columns"></i>Show Columns
+                </button>
+                <button type="submit" name="action" value="count_rows" class="copy-btn">
+                    <i class="fas fa-calculator"></i>Count Rows
+                </button>
+            </div>
+
+            <div class="mini-tools">
+                <button type="button" class="copy-btn" onclick="insertTemplate('top')">
+                    <i class="fas fa-list-ol"></i>SELECT TOP 100
+                </button>
+                <button type="button" class="copy-btn" onclick="insertTemplate('count')">
+                    <i class="fas fa-calculator"></i>Table Count
+                </button>
+                <button type="button" class="copy-btn" onclick="insertTemplate('nulls')">
+                    <i class="fas fa-circle-question"></i>Null Check
+                </button>
+                <button type="button" class="copy-btn" onclick="insertTemplate('duplicates')">
+                    <i class="fas fa-copy"></i>Duplicate Check
+                </button>
+                <button type="button" class="copy-btn" onclick="formatSqlQuery()">
+                    <i class="fas fa-align-left"></i>Format SQL
+                </button>
+                <button type="button" class="copy-btn" onclick="explainSqlQuery()">
+                    <i class="fas fa-circle-info"></i>Explain Query
+                </button>
+            </div>
+
+            <!-- QUERY -->
+            <textarea
+            id="queryBox"
+            name="query"
+            rows="4"
+            placeholder="Write SQL Query Here...">{{ query }}</textarea>
+
+            <div id="querySummary" class="meta-card" style="display:none; margin:8px 0 12px;"></div>
+
+            <!-- AUTOCOMPLETE -->
+            <div id="suggestions"></div>
+
+            {% if query_history %}
+            <div class="query-history">
+                <div class="query-history-title">Recent Queries</div>
+                <div class="query-history-list">
+                    {% for old_query in query_history %}
+                    <button
+                        type="button"
+                        class="history-query"
+                        title="{{ old_query }}"
+                        data-query="{{ old_query|e }}"
+                        onclick="fillRecentQuery(this)">
+                        {{ old_query }}
+                    </button>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="query-history">
+                <div class="query-history-title">Saved Queries</div>
+                <div class="grid">
+                    <input id="saveQueryTitle" type="text" placeholder="Saved query title">
+                    <button type="button" class="excel-btn" onclick="saveCurrentQuery()">
+                        <i class="fas fa-bookmark"></i>Save Current Query
+                    </button>
+                </div>
+                {% if saved_queries %}
+                <div class="query-history-list">
+                    {% for saved in saved_queries %}
+                    <div style="display:grid; grid-template-columns:1fr auto; gap:8px;">
+                        <button
+                            type="button"
+                            class="history-query"
+                            title="{{ saved[2] }}"
+                            data-query="{{ saved[2]|e }}"
+                            onclick="fillRecentQuery(this)">
+                            {{ saved[1] }}
+                        </button>
+                        <button type="button" class="clear-btn" style="min-width:42px; padding:9px;" onclick="postAction('/delete_saved_query/{{ saved[0] }}', 'Delete this saved query?')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="muted" style="font-size:12px; color:var(--muted);">No saved queries yet.</div>
+                {% endif %}
+            </div>
+
+            <div class="section-title">
+                <i class="fas fa-file-lines"></i>
+                SIDBI Reports
+            </div>
+
+            <!-- MULTI QUERY -->
+            <div class="sidbi-panel">
+
+                <div class="sidbi-header">
+                    <h3>
+                        SIDBI Prayas Reports
+                        <span>Select the DPD table once, then add one report or run the full pack.</span>
+                    </h3>
+                </div>
+
+                <div class="dpd-table-row">
+                    <select id="dpdTableSelect" onchange="setDpdTableFromDropdown()">
+                        <option value="">-- Select DPD Table --</option>
+                        {% for t in tables %}
+                        <option value="{{ t }}"
+                        {% if dpd_table_name == t %}selected{% endif %}>
+                            {{ t }}
+                        </option>
+                        {% endfor %}
+                    </select>
+
+                    <input
+                    id="dpdTableName"
+                    name="dpd_table_name"
+                    type="text"
+                    value="{{ dpd_table_name or '' }}"
+                    placeholder="DPD table name e.g. BookDebt05032026">
+                </div>
+
+                <div class="dpd-table-row" style="margin-top:10px;">
+                    <input
+                    id="reportMonth"
+                    name="report_month"
+                    type="text"
+                    placeholder="Report month e.g. Apr-26">
+
+                    <button type="submit" name="action" value="validate_sidbi" class="copy-btn">
+                        <i class="fas fa-check-circle"></i>Validate SIDBI Table
+                    </button>
+                </div>
+
+                <div class="sidbi-actions">
+
+                    <button
+                        type="button"
+                        onclick="addDpdToMultiQuery()"
+                        id="sidbiStaffWiseButton"
+                        class="dpd-btn sidbi-action-btn">
+                        <span class="sidbi-button-progress" id="sidbiStaffWiseProgress"></span>
+                        <span class="sidbi-button-text">
+                            <i class="fas fa-user-tie"></i>
+                            Staff Wise
+                            <span class="sidbi-progress-percent" id="sidbiStaffWisePercent">0%</span>
+                        </span>
+                    </button>
+
+                    <button
+                        type="button"
+                        onclick="addSidbiPrayas1To30ToMultiQuery()"
+                        id="sidbiStaffWise130Button"
+                        class="dpd-btn sidbi-action-btn">
+                        <span class="sidbi-button-progress" id="sidbiStaffWise130Progress"></span>
+                        <span class="sidbi-button-text">
+                            <i class="fas fa-calendar-days"></i>
+                            Staff Wise 1-30
+                            <span class="sidbi-progress-percent" id="sidbiStaffWise130Percent">0%</span>
+                        </span>
+                    </button>
+
+                    <button
+                        type="button"
+                        onclick="addTopSheetToMultiQuery()"
+                        id="sidbiTopSheetButton"
+                        class="dpd-btn sidbi-action-btn">
+                        <span class="sidbi-button-progress" id="sidbiTopSheetProgress"></span>
+                        <span class="sidbi-button-text">
+                            <i class="fas fa-table-list"></i>
+                            Top Sheet
+                            <span class="sidbi-progress-percent" id="sidbiTopSheetPercent">0%</span>
+                        </span>
+                    </button>
+
+                    <button
+                        type="button"
+                        onclick="runSidbiPrayasReports()"
+                        id="sidbiRunAllButton"
+                        class="sidbi-run-all sidbi-action-btn">
+                        <span class="sidbi-button-progress" id="sidbiRunAllProgress"></span>
+                        <span class="sidbi-button-text">
+                            <i class="fas fa-file-excel"></i>
+                            Run Full Pack
+                            <span class="sidbi-progress-percent" id="sidbiRunAllPercent">0%</span>
+                        </span>
+                    </button>
+
+                </div>
+
+            </div>
+
+            <div class="section-title">
+                <i class="fas fa-list-check"></i>
+                Multi Query
+            </div>
+
+            <textarea
+            id="compareQueryBox"
+            name="compare_query"
+            rows="3"
+            placeholder="Optional second query for comparison"></textarea>
+
+            <div class="mini-tools">
+                <button type="submit" name="action" value="compare_query" class="copy-btn">
+                    <i class="fas fa-code-compare"></i>Compare Query 1 vs Query 2
+                </button>
+            </div>
+
+            <textarea
+            id="multiQueryBox"
+            name="multi_query"
+            rows="4"
+            placeholder="Multiple queries separated by ;"></textarea>
+
+            <!-- BUTTONS -->
+            <div class="btn-group">
+
+                <button
+                    type="submit"
+                    name="action"
+                    value="run_query"
+                    class="run-btn">
+
+                    ðŸš€ Run Query
+
+                </button>
+
+                <button
+                    type="submit"
+                    name="action"
+                    value="add_excel"
+                    class="excel-btn">
+
+                    ðŸš€ Run Query And âž• Add To Excel
+
+                </button>
+
+                <div>
+
+                    <button type="button" class="clear-btn" onclick="postAction('/clear_multi', 'Clear all staged Excel sheets?')">
+                        ðŸ—‘ Clear
+                    </button>
+
+                </div>
+
+            </div>
+
+        </form>
+
+        <!-- EXTRA BUTTONS -->
+        <div class="btn-group">
+
+            <a href="/download_multi_excel">
+
+                <button type="button" class="excel-btn">
+                    ðŸ“¥ Download Excel
+                </button>
+
+            </a>
+
+            <a href="/view_excel_data">
+
+                <button type="button" class="run-btn">
+                    ðŸ“Š View Excel
+                </button>
+
+            </a>
+
+            <a href="/manage_sheets">
+
+                <button type="button" class="copy-btn">
+                    âš™ Manage Sheets
+                </button>
+
+            </a>
+
+            <a href="/report_history">
+                <button type="button" class="copy-btn">
+                    <i class="fas fa-clock-rotate-left"></i>Report History
+                </button>
+            </a>
+
+        </div>
+
+        <!-- ERROR -->
+        {% if error %}
+        <div class="error">
+            âŒ {{ error }}
+        </div>
+        {% endif %}
+
+        <!-- RESULT -->
+        {% if result %}
+
+        {% if result_meta %}
+        <div class="meta-grid">
+            <div class="meta-card"><strong>Status</strong>{{ result_meta.status }}</div>
+            <div class="meta-card"><strong>Rows</strong>{{ result_meta.rows_count }}</div>
+            <div class="meta-card"><strong>Execution</strong>{{ result_meta.elapsed_ms }} ms</div>
+            <div class="meta-card"><strong>Columns</strong>{{ result.columns|length }}</div>
+        </div>
+        {% endif %}
+
+        <div class="result-tools">
+            <input id="resultSearch" type="text" placeholder="Search result rows..." oninput="filterResultTable()">
+            <button onclick="copyTable()" class="copy-btn" type="button">
+                <i class="fas fa-copy"></i>Copy
+            </button>
+            <button onclick="copyAsCsv()" class="copy-btn" type="button">
+                <i class="fas fa-file-csv"></i>Copy CSV
+            </button>
+            <a href="/download_csv"><button class="excel-btn" type="button"><i class="fas fa-file-csv"></i>CSV</button></a>
+            <a href="/download_json"><button class="run-btn" type="button"><i class="fas fa-code"></i>JSON</button></a>
+            <button onclick="toggleColumnPanel()" class="copy-btn" type="button">
+                <i class="fas fa-eye-slash"></i>Columns
+            </button>
+        </div>
+
+        <div id="columnToggleList" class="column-toggle-list"></div>
+
+        <div class="table-wrapper">
+
+            <table id="resultTable">
+
+                <tr>
+                    {% for col in result.columns %}
+                    <th>{{ col }}</th>
+                    {% endfor %}
+                </tr>
+
+                {% for row in result.rows %}
+                <tr>
+
+                    {% for item in row %}
+                    <td>{{ item }}</td>
+                    {% endfor %}
+
+                </tr>
+                {% endfor %}
+
+            </table>
+
+        </div>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+<script>
+
+function setButtonHtml(selector, html, index){
+    let buttons = document.querySelectorAll(selector);
+    let button = buttons[index || 0];
+
+    if(button){
+        button.innerHTML = html;
+    }
+}
+
+setButtonHtml('button[name="action"][value="connect_server"]', '<i class="fas fa-link"></i>Connect Server', 0);
+setButtonHtml('button[name="action"][value="connect_server"]', '<i class="fas fa-right-to-bracket"></i>Connect With Login', 1);
+setButtonHtml('button[name="action"][value="run_query"]', '<i class="fas fa-play"></i>Run Query');
+setButtonHtml('button[name="action"][value="add_excel"]', '<i class="fas fa-file-excel"></i>Run Query And Add To Excel');
+setButtonHtml('button[onclick*="/clear_multi"]', '<i class="fas fa-trash"></i>Clear');
+setButtonHtml('a[href="/download_multi_excel"] button', '<i class="fas fa-download"></i>Download Excel');
+setButtonHtml('a[href="/view_excel_data"] button', '<i class="fas fa-chart-column"></i>View Excel');
+setButtonHtml('a[href="/manage_sheets"] button', '<i class="fas fa-gear"></i>Manage Sheets');
+setButtonHtml('button[onclick="copyTable()"]', '<i class="fas fa-copy"></i>Copy Table');
+
+let tables = JSON.parse('{{ tables | tojson | safe }}');
+
+let queryBox = document.getElementById("queryBox");
+let suggestionBox = document.getElementById("suggestions");
+let sqlForm = document.getElementById("sqlForm");
+let progressTimer = null;
+let sidbiButtonTimers = {};
+
+function startSqlProgress(message){
+    let panel = document.getElementById("progressPanel");
+    let fill = document.getElementById("progressFill");
+    let percentLabel = document.getElementById("progressPercent");
+    let text = document.getElementById("progressText");
+
+    if(!panel || !fill || !percentLabel || !text){
+        return;
+    }
+
+    let progress = 8;
+    text.innerText = message || "Running SQL...";
+    panel.style.display = "block";
+    fill.style.width = progress + "%";
+    percentLabel.innerText = progress + "%";
+
+    if(progressTimer){
+        clearInterval(progressTimer);
+    }
+
+    progressTimer = setInterval(function(){
+        if(progress < 70){
+            progress += 7;
+        }
+        else if(progress < 90){
+            progress += 2;
+        }
+        else if(progress < 96){
+            progress += 1;
+        }
+
+        fill.style.width = progress + "%";
+        percentLabel.innerText = progress + "%";
+    }, 450);
+}
+
+function startSidbiButtonProgress(buttonId){
+    let button = document.getElementById(buttonId);
+    let fill = document.getElementById(buttonId.replace("Button", "Progress"));
+    let percent = document.getElementById(buttonId.replace("Button", "Percent"));
+
+    if(!button || !fill || !percent){
+        return;
+    }
+
+    let progress = 6;
+    button.classList.add("sidbi-progress-running");
+    button.disabled = true;
+    fill.style.width = progress + "%";
+    percent.innerText = progress + "%";
+
+    if(sidbiButtonTimers[buttonId]){
+        clearInterval(sidbiButtonTimers[buttonId]);
+    }
+
+    sidbiButtonTimers[buttonId] = setInterval(function(){
+        if(progress < 68){
+            progress += 8;
+        }
+        else if(progress < 90){
+            progress += 3;
+        }
+        else if(progress < 97){
+            progress += 1;
+        }
+
+        fill.style.width = progress + "%";
+        percent.innerText = progress + "%";
+    }, 420);
+}
+
+function stopSidbiButtonProgress(buttonId){
+    let button = document.getElementById(buttonId);
+    let fill = document.getElementById(buttonId.replace("Button", "Progress"));
+    let percent = document.getElementById(buttonId.replace("Button", "Percent"));
+
+    if(sidbiButtonTimers[buttonId]){
+        clearInterval(sidbiButtonTimers[buttonId]);
+        delete sidbiButtonTimers[buttonId];
+    }
+
+    if(button){
+        button.classList.remove("sidbi-progress-running");
+        button.disabled = false;
+    }
+
+    if(fill){
+        fill.style.width = "0%";
+    }
+
+    if(percent){
+        percent.innerText = "0%";
+    }
+}
+
+if(sqlForm){
+    sqlForm.addEventListener("submit", function(e){
+        if(window.__sidbiRunning){
+            window.__sidbiRunning = false;
+            return;
+        }
+
+        let action = e.submitter ? e.submitter.value : "";
+        let message = "Running SQL...";
+
+        if(action === "connect_server"){
+            message = "Connecting to server...";
+        }
+        else if(action === "run_query"){
+            message = "Running query...";
+        }
+        else if(action === "add_excel"){
+            message = "Running query and adding to Excel...";
+        }
+        else if(action === "compare_query"){
+            message = "Comparing queries...";
+        }
+
+        startSqlProgress(message);
+    });
+}
+
+function setDpdTableFromDropdown(){
+    let dpdTableSelect = document.getElementById("dpdTableSelect");
+    let dpdTableName = document.getElementById("dpdTableName");
+
+    if(dpdTableSelect && dpdTableName && dpdTableSelect.value){
+        dpdTableName.value = dpdTableSelect.value;
+    }
+}
+
+function fillRecentQuery(button){
+    let query = button.getAttribute("data-query") || "";
+    queryBox.value = query;
+    queryBox.focus();
+}
+
+function postAction(action, confirmation){
+    if(confirmation && !confirm(confirmation)){
+        return;
+    }
+
+    let form = document.createElement("form");
+    form.method = "POST";
+    form.action = action;
+
+    let csrf = document.createElement("input");
+    csrf.type = "hidden";
+    csrf.name = "_csrf_token";
+    csrf.value = "{{ csrf_token() }}";
+
+    form.appendChild(csrf);
+    document.body.appendChild(form);
+    form.submit();
+}
+
+function saveCurrentQuery(){
+    let titleInput = document.getElementById("saveQueryTitle");
+    let queryText = queryBox ? queryBox.value.trim() : "";
+
+    if(!queryText){
+        alert("Write a query first");
+        return;
+    }
+
+    let form = document.createElement("form");
+    form.method = "POST";
+    form.action = "/save_query";
+
+    let title = document.createElement("input");
+    title.type = "hidden";
+    title.name = "title";
+    title.value = titleInput && titleInput.value.trim() ? titleInput.value.trim() : "Saved Query";
+
+    let query = document.createElement("input");
+    query.type = "hidden";
+    query.name = "query_text";
+    query.value = queryText;
+
+    let csrf = document.createElement("input");
+    csrf.type = "hidden";
+    csrf.name = "_csrf_token";
+    csrf.value = "{{ csrf_token() }}";
+
+    form.appendChild(title);
+    form.appendChild(query);
+    form.appendChild(csrf);
+    document.body.appendChild(form);
+    form.submit();
+}
+
+queryBox.addEventListener("keyup", function(){
+
+    let word = queryBox.value.split(/\s+/).pop().toLowerCase();
+
+    suggestionBox.innerHTML = "";
+
+    if(word.length === 0){
+        suggestionBox.style.display = "none";
+        return;
+    }
+
+    let match = tables.filter(
+        t => t.toLowerCase().startsWith(word)
+    );
+
+    match.forEach(t => {
+
+        let div = document.createElement("div");
+
+        div.innerText = t;
+
+        div.onclick = () => {
+
+            let arr = queryBox.value.split(/\s+/);
+
+            arr.pop();
+
+            arr.push(t);
+
+            queryBox.value = arr.join(" ") + " ";
+
+            suggestionBox.style.display = "none";
+        };
+
+        suggestionBox.appendChild(div);
+
+    });
+
+    suggestionBox.style.display =
+        match.length ? "block" : "none";
+
+});
+
+document.addEventListener("click", function(e){
+
+    if(
+        !queryBox.contains(e.target) &&
+        !suggestionBox.contains(e.target)
+    ){
+        suggestionBox.style.display = "none";
+    }
+
+});
+
+function copyTable(){
+
+    let table = document.getElementById("resultTable");
+
+    if(!table){
+        alert("No data available");
+        return;
+    }
+
+    let text = "";
+
+    for(let r of table.rows){
+
+        for(let c of r.cells){
+            text += c.innerText + "\t";
+        }
+
+        text += "\n";
+    }
+
+    navigator.clipboard.writeText(text);
+
+    alert("Copied successfully");
+}
+
+function getSelectedTable(){
+    let tableSelect = document.getElementById("tableSelect");
+    return tableSelect && tableSelect.value ? tableSelect.value : "YourTable";
+}
+
+function insertTemplate(type){
+    let table = getSelectedTable();
+    let templates = {
+        top: "SELECT TOP 100 * FROM " + table + ";",
+        count: "SELECT COUNT(*) AS RowCount FROM " + table + ";",
+        nulls: "SELECT * FROM " + table + " WHERE ColumnName IS NULL;",
+        duplicates: "SELECT ColumnName, COUNT(*) AS DuplicateCount FROM " + table + " GROUP BY ColumnName HAVING COUNT(*) > 1;"
+    };
+    queryBox.value = templates[type] || "";
+    queryBox.focus();
+}
+
+function formatSqlQuery(){
+    if(!queryBox){
+        return;
+    }
+    let sql = queryBox.value
+        .replace(/\s+/g, " ")
+        .replace(/\bFROM\b/ig, "\nFROM")
+        .replace(/\bWHERE\b/ig, "\nWHERE")
+        .replace(/\bGROUP BY\b/ig, "\nGROUP BY")
+        .replace(/\bORDER BY\b/ig, "\nORDER BY")
+        .replace(/\bHAVING\b/ig, "\nHAVING")
+        .replace(/\bJOIN\b/ig, "\nJOIN")
+        .replace(/\bLEFT JOIN\b/ig, "\nLEFT JOIN")
+        .replace(/\bRIGHT JOIN\b/ig, "\nRIGHT JOIN")
+        .replace(/\bINNER JOIN\b/ig, "\nINNER JOIN")
+        .replace(/,\s*/g, ",\n    ")
+        .trim();
+    queryBox.value = sql;
+}
+
+function explainSqlQuery(){
+    let summary = document.getElementById("querySummary");
+    let sql = (queryBox.value || "").trim().toLowerCase();
+    if(!summary || !sql){
+        return;
+    }
+
+    let text = "This query will run against the selected database.";
+    if(sql.startsWith("select")){
+        text = "This SELECT query reads data and returns matching rows.";
+    }
+    else if(sql.startsWith("exec")){
+        text = "This EXEC query runs a stored procedure or built-in report.";
+    }
+    else if(sql.includes("count(")){
+        text = "This query calculates aggregate counts.";
+    }
+
+    if(sql.includes("select *") && !sql.includes("top ")){
+        text += " Warning: SELECT * without TOP can be slow on large tables.";
+    }
+
+    summary.innerText = text;
+    summary.style.display = "block";
+}
+
+function filterResultTable(){
+    let search = (document.getElementById("resultSearch").value || "").toLowerCase();
+    let table = document.getElementById("resultTable");
+    if(!table){
+        return;
+    }
+
+    for(let i = 1; i < table.rows.length; i++){
+        let rowText = table.rows[i].innerText.toLowerCase();
+        table.rows[i].style.display = rowText.includes(search) ? "" : "none";
+    }
+}
+
+function copyAsCsv(){
+    let table = document.getElementById("resultTable");
+    if(!table){
+        alert("No data available");
+        return;
+    }
+
+    let lines = [];
+    for(let row of table.rows){
+        if(row.style.display === "none"){
+            continue;
+        }
+        let values = [];
+        for(let cell of row.cells){
+            values.push('"' + cell.innerText.replace(/"/g, '""') + '"');
+        }
+        lines.push(values.join(","));
+    }
+    navigator.clipboard.writeText(lines.join("\n"));
+    alert("CSV copied successfully");
+}
+
+function buildColumnToggles(){
+    let table = document.getElementById("resultTable");
+    let panel = document.getElementById("columnToggleList");
+    if(!table || !panel || panel.children.length){
+        return;
+    }
+
+    Array.from(table.rows[0].cells).forEach(function(cell, index){
+        let label = document.createElement("label");
+        let checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.checked = true;
+        checkbox.onchange = function(){
+            for(let row of table.rows){
+                if(row.cells[index]){
+                    row.cells[index].style.display = checkbox.checked ? "" : "none";
+                }
+            }
+        };
+        label.appendChild(checkbox);
+        label.appendChild(document.createTextNode(cell.innerText));
+        panel.appendChild(label);
+    });
+}
+
+function toggleColumnPanel(){
+    let panel = document.getElementById("columnToggleList");
+    if(!panel){
+        return;
+    }
+    buildColumnToggles();
+    panel.style.display = panel.style.display === "grid" ? "none" : "grid";
+}
+
+buildColumnToggles();
+
+function addDpdToMultiQuery(){
+
+    startSidbiButtonProgress("sidbiStaffWiseButton");
+
+    let multiQueryBox = document.getElementById("multiQueryBox");
+    let dpdTableName = document.getElementById("dpdTableName").value.trim();
+
+    if(!dpdTableName){
+        stopSidbiButtonProgress("sidbiStaffWiseButton");
+        alert("Please enter DPD table name");
+        document.getElementById("dpdTableName").focus();
+        return;
+    }
+
+    let safeTableName = dpdTableName.replace(/'/g, "''");
+    let dpdQuery = "EXEC usp_DPD_Report_1_to_28 '" + safeTableName + "';";
+    let currentValue = multiQueryBox.value.trim();
+
+    if(currentValue.length > 0 && !currentValue.endsWith(";")){
+        currentValue += ";";
+    }
+
+    multiQueryBox.value = currentValue
+        ? currentValue + "\n" + dpdQuery
+        : dpdQuery;
+
+    multiQueryBox.focus();
+
+    setTimeout(function(){
+        stopSidbiButtonProgress("sidbiStaffWiseButton");
+    }, 700);
+}
+
+function addSidbiPrayas1To30ToMultiQuery(){
+
+    startSidbiButtonProgress("sidbiStaffWise130Button");
+
+    let multiQueryBox = document.getElementById("multiQueryBox");
+    let dpdTableName = document.getElementById("dpdTableName").value.trim();
+
+    if(!dpdTableName){
+        stopSidbiButtonProgress("sidbiStaffWise130Button");
+        alert("Please enter DPD table name");
+        document.getElementById("dpdTableName").focus();
+        return;
+    }
+
+    let safeTableName = dpdTableName.replace(/'/g, "''");
+    let dpdQuery = "EXEC usp_DPD_Report_1_to_30 '" + safeTableName + "';";
+    let currentValue = multiQueryBox.value.trim();
+
+    if(currentValue.length > 0 && !currentValue.endsWith(";")){
+        currentValue += ";";
+    }
+
+    multiQueryBox.value = currentValue
+        ? currentValue + "\n" + dpdQuery
+        : dpdQuery;
+
+    multiQueryBox.focus();
+
+    setTimeout(function(){
+        stopSidbiButtonProgress("sidbiStaffWise130Button");
+    }, 700);
+}
+
+function addTopSheetToMultiQuery(){
+
+    startSidbiButtonProgress("sidbiTopSheetButton");
+
+    let multiQueryBox = document.getElementById("multiQueryBox");
+    let dpdTableName = document.getElementById("dpdTableName").value.trim();
+
+    if(!dpdTableName){
+        stopSidbiButtonProgress("sidbiTopSheetButton");
+        alert("Please enter DPD table name");
+        document.getElementById("dpdTableName").focus();
+        return;
+    }
+
+    let safeTableName = dpdTableName.replace(/'/g, "''");
+    let topSheetQuery = "EXEC usp_SIDBI_Prayaas_TopSheet '" + safeTableName + "';";
+    let currentValue = multiQueryBox.value.trim();
+
+    if(currentValue.length > 0 && !currentValue.endsWith(";")){
+        currentValue += ";";
+    }
+
+    multiQueryBox.value = currentValue
+        ? currentValue + "\n" + topSheetQuery
+        : topSheetQuery;
+
+    multiQueryBox.focus();
+
+    setTimeout(function(){
+        stopSidbiButtonProgress("sidbiTopSheetButton");
+    }, 700);
+}
+
+function runSidbiPrayasReports(){
+
+    let form = document.getElementById("sqlForm");
+    let multiQueryBox = document.getElementById("multiQueryBox");
+    let dpdTableName = document.getElementById("dpdTableName").value.trim();
+
+    if(!dpdTableName){
+        alert("Please enter DPD table name");
+        document.getElementById("dpdTableName").focus();
+        return;
+    }
+
+    let safeTableName = dpdTableName.replace(/'/g, "''");
+
+    multiQueryBox.value = [
+        "EXEC usp_DPD_Report_1_to_28 '" + safeTableName + "';",
+        "EXEC usp_DPD_Report_1_to_30 '" + safeTableName + "';",
+        "EXEC usp_SIDBI_Prayaas_TopSheet '" + safeTableName + "';"
+    ].join("\n");
+
+    let actionInput = document.getElementById("sidbiAction");
+
+    if(!actionInput){
+        actionInput = document.createElement("input");
+        actionInput.type = "hidden";
+        actionInput.id = "sidbiAction";
+        actionInput.name = "action";
+        form.appendChild(actionInput);
+    }
+
+    actionInput.value = "add_excel";
+    window.__sidbiRunning = true;
+    startSidbiButtonProgress("sidbiRunAllButton");
+    form.submit();
+}
+
+</script>
+
+<button class="global-back-button" type="button" onclick="goBack()">
+    <span aria-hidden="true">&larr;</span>
+    Back
+</button>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+<div class="global-flash-stack" aria-live="polite">
+    {% for category, message in messages %}
+    <div class="global-flash {{ category }}">{{ message }}</div>
+    {% endfor %}
+</div>
+{% endif %}
+{% endwith %}
+
+{% if session.get('logged_in') %}
+<div class="global-quick-panel" aria-label="Quick tools">
+    <div class="global-clock" id="globalClock">--:--</div>
+    <button class="global-tool-button" type="button" onclick="goDashboard()">Home</button>
+    <button class="global-tool-button" type="button" onclick="goSqlPage()">SQL</button>
+    <button class="global-tool-button" type="button" onclick="scrollToTop()">Top</button>
+    <button class="global-tool-button" type="button" onclick="togglePageFocus()">Focus</button>
+</div>
+{% endif %}
+
+<style>
+    /* ===== Global Appearance (applies across pages) ===== */
+    :root{
+        --app-font-scale: 1;
+        --app-brightness: 1;
+    }
+
+    body{
+        font-size: calc(16px * var(--app-font-scale));
+        filter: brightness(var(--app-brightness));
+    }
+
+    .global-back-button {
+        position: fixed;
+        top: 18px;
+        left: 18px;
+        z-index: 9999;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        width: auto;
+        min-width: 88px;
+        padding: 10px 14px;
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        border-radius: 8px;
+        background: rgba(18, 25, 38, 0.78);
+        color: #fff;
+        font: 600 14px 'Segoe UI', Arial, sans-serif;
+        line-height: 1;
+        text-decoration: none;
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+        backdrop-filter: blur(10px);
+        cursor: pointer;
+        transition: background 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
+        will-change: transform;
+    }
+
+    .global-back-button:hover {
+        background: #ff7a00;
+        transform: translateY(-1px);
+    }
+
+    .global-back-button span {
+        font-size: 13px;
+    }
+
+    .global-quick-panel {
+        position: fixed;
+        top: 18px;
+        right: 18px;
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.20);
+        border-radius: 8px;
+        background: rgba(18, 25, 38, 0.78);
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+        backdrop-filter: blur(12px);
+        transition: box-shadow 0.25s ease, border-color 0.25s ease;
+    }
+
+    .global-flash-stack {
+        position: fixed;
+        top: 74px;
+        right: 18px;
+        z-index: 10000;
+        display: grid;
+        gap: 8px;
+        width: min(380px, calc(100vw - 36px));
+    }
+
+    .global-flash {
+        padding: 12px 14px;
+        border: 1px solid rgba(255, 255, 255, 0.24);
+        border-radius: 8px;
+        background: rgba(18, 25, 38, 0.92);
+        color: #fff;
+        font: 700 13px 'Segoe UI', Arial, sans-serif;
+        line-height: 1.35;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.28);
+        backdrop-filter: blur(12px);
+    }
+
+    .global-flash.success {
+        background: rgba(5, 150, 105, 0.95);
+    }
+
+    .global-flash.error,
+    .global-flash.danger {
+        background: rgba(220, 38, 38, 0.95);
+    }
+
+    .global-flash.warning {
+        background: rgba(217, 119, 6, 0.95);
+    }
+
+    .global-clock {
+        min-width: 62px;
+        color: #fff;
+        font: 700 13px 'Segoe UI', Arial, sans-serif;
+        text-align: center;
+        letter-spacing: 0;
+    }
+
+    .global-tool-button {
+        width: auto;
+        min-width: 48px;
+        padding: 9px 10px;
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+        font: 700 12px 'Segoe UI', Arial, sans-serif;
+        line-height: 1;
+        cursor: pointer;
+        transition: background 0.2s, transform 0.2s;
+    }
+
+    .global-tool-button:hover {
+        background: #2563eb;
+        transform: translateY(-1px);
+    }
+
+    body.global-focus-mode::before {
+        background: rgba(0, 0, 0, 0.78) !important;
+    }
+
+    body.global-focus-mode .main-container {
+        box-shadow: 0 18px 70px rgba(0, 176, 255, 0.28) !important;
+    }
+
+    @media (max-width: 600px) {
+        .global-back-button {
+            top: 10px;
+            left: 10px;
+            min-width: 78px;
+            padding: 9px 11px;
+            font-size: 13px;
+        }
+
+        .global-quick-panel {
+            top: auto;
+            right: 10px;
+            bottom: 10px;
+            left: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .global-flash-stack {
+            top: 58px;
+            right: 10px;
+            left: 10px;
+            width: auto;
+        }
+
+        .global-clock {
+            width: 100%;
+        }
+    }
+</style>
+
+<script>
+    function goBack() {
+        if (window.history.length > 1) {
+            window.history.back();
+            return;
+        }
+
+        window.location.href = "/dashboard";
+    }
+
+    function goDashboard() {
+        window.location.href = "/dashboard";
+    }
+
+    function goSqlPage() {
+        window.location.href = "/sql";
+    }
+
+    function scrollToTop() {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+
+        const scrollBox = document.querySelector(".right");
+        if (scrollBox) {
+            scrollBox.scrollTo({ top: 0, behavior: "smooth" });
+        }
+    }
+
+    function togglePageFocus() {
+        document.body.classList.toggle("global-focus-mode");
+        localStorage.setItem(
+            "globalFocusMode",
+            document.body.classList.contains("global-focus-mode") ? "1" : "0"
+        );
+    }
+
+    function updateGlobalClock() {
+        const clock = document.getElementById("globalClock");
+        if (!clock) {
+            return;
+        }
+
+        const now = new Date();
+        clock.innerText = now.toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit"
+        });
+    }
+
+    // ===== Global appearance apply from localStorage =====
+    (function applySavedAppearance() {
+        const savedFont = localStorage.getItem("settings_font_percent");
+        const savedBrightness = localStorage.getItem("settings_brightness_percent");
+
+        const initialFont = savedFont ? Number(savedFont) : 100;
+        const initialBrightness = savedBrightness ? Number(savedBrightness) : 100;
+
+        const fontScale = initialFont / 100;
+        const brightness = initialBrightness / 100;
+
+        document.documentElement.style.setProperty("--app-font-scale", String(fontScale));
+        document.documentElement.style.setProperty("--app-brightness", String(brightness));
+
+        // Settings page ka UI label update yahan zaroori nahi (sirf apply)
+    })();
+
+    if (localStorage.getItem("globalFocusMode") === "1") {
+        document.body.classList.add("global-focus-mode");
+    }
+
+    updateGlobalClock();
+    setInterval(updateGlobalClock, 30000);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | SQL Workspace</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <style>
+        :root{
+            --ink:#172033;
+            --muted:#667085;
+            --line:#d9e2ec;
+            --panel:#ffffff;
+            --soft:#f4f7fb;
+            --primary:#2563eb;
+            --primary-dark:#1d4ed8;
+            --green:#059669;
+            --orange:#f59e0b;
+            --danger:#dc2626;
+        }
+
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+            font-family:"Segoe UI", Arial, sans-serif;
+            letter-spacing:0;
+        }
+
+        body{
+            min-height:100vh;
+            background:
+                linear-gradient(120deg, rgba(13,21,35,0.82), rgba(27,41,63,0.66)),
+                url("{{ url_for('static', filename='Images/login3.jpg') }}");
+            background-size:cover;
+            background-position:center;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            padding:24px;
+            color:var(--ink);
+        }
+
+        .login-shell{
+            width:min(1040px, 100%);
+            min-height:620px;
+            display:grid;
+            grid-template-columns:minmax(0, 1.05fr) minmax(390px, 0.95fr);
+            overflow:hidden;
+            border:1px solid rgba(255,255,255,0.28);
+            border-radius:8px;
+            background:rgba(255,255,255,0.88);
+            box-shadow:0 24px 70px rgba(0,0,0,0.42);
+        }
+
+        .brand-panel{
+            position:relative;
+            padding:34px;
+            background:
+                linear-gradient(180deg, rgba(18,25,38,0.92), rgba(18,25,38,0.78)),
+                url("{{ url_for('static', filename='Images/login3.jpg') }}");
+            background-size:cover;
+            background-position:center;
+            color:white;
+            display:flex;
+            flex-direction:column;
+            justify-content:space-between;
+            gap:28px;
+        }
+
+        .brand-mark{
+            display:flex;
+            align-items:center;
+            gap:12px;
+        }
+
+        .logo{
+            width:48px;
+            height:48px;
+            border-radius:8px;
+            background:var(--primary);
+            display:grid;
+            place-items:center;
+            font-size:21px;
+            box-shadow:0 12px 30px rgba(37,99,235,0.36);
+        }
+
+        .brand-mark strong{
+            display:block;
+            font-size:18px;
+            line-height:24px;
+        }
+
+        .brand-mark span{
+            display:block;
+            color:#b8c2d2;
+            font-size:12px;
+            margin-top:1px;
+        }
+
+        .brand-copy{
+            max-width:480px;
+        }
+
+        .brand-copy h1{
+            font-size:42px;
+            line-height:50px;
+            margin-bottom:14px;
+            font-weight:800;
+        }
+
+        .brand-copy p{
+            color:#d1d8e4;
+            font-size:15px;
+            line-height:25px;
+        }
+
+        .feature-grid{
+            display:grid;
+            grid-template-columns:repeat(2, minmax(0,1fr));
+            gap:12px;
+        }
+
+        .feature{
+            min-height:74px;
+            padding:14px;
+            border:1px solid rgba(255,255,255,0.14);
+            border-radius:8px;
+            background:rgba(255,255,255,0.08);
+            backdrop-filter:blur(12px);
+        }
+
+        .feature i{
+            color:#93c5fd;
+            margin-bottom:8px;
+        }
+
+        .feature span{
+            display:block;
+            font-size:13px;
+            line-height:18px;
+            color:#e5eaf2;
+            font-weight:700;
+        }
+
+        .form-panel{
+            background:var(--panel);
+            padding:42px;
+            display:flex;
+            flex-direction:column;
+            justify-content:center;
+        }
+
+        .form-head{
+            margin-bottom:26px;
+        }
+
+        .form-head .badge{
+            width:max-content;
+            display:flex;
+            align-items:center;
+            gap:8px;
+            padding:7px 10px;
+            border:1px solid #bfdbfe;
+            border-radius:999px;
+            background:#eff6ff;
+            color:#1d4ed8;
+            font-size:12px;
+            font-weight:800;
+            margin-bottom:14px;
+        }
+
+        .form-head h2{
+            font-size:30px;
+            line-height:38px;
+            color:var(--ink);
+            margin-bottom:6px;
+        }
+
+        .form-head p{
+            color:var(--muted);
+            font-size:14px;
+            line-height:22px;
+        }
+
+        .field{
+            margin-bottom:14px;
+        }
+
+        .field label{
+            display:block;
+            margin-bottom:7px;
+            color:#344054;
+            font-size:13px;
+            font-weight:800;
+        }
+
+        .input-wrap{
+            position:relative;
+        }
+
+        .input-wrap i{
+            position:absolute;
+            left:14px;
+            top:50%;
+            transform:translateY(-50%);
+            color:#7b8797;
+            font-size:14px;
+        }
+
+        .input-wrap input{
+            width:100%;
+            min-height:46px;
+            border:1px solid var(--line);
+            border-radius:8px;
+            outline:none;
+            padding:12px 42px;
+            background:#fff;
+            color:var(--ink);
+            font-size:14px;
+            transition:border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+        }
+
+        .input-wrap input:focus{
+            border-color:var(--primary);
+            box-shadow:0 0 0 3px rgba(37,99,235,0.14);
+            background:#fbfdff;
+        }
+
+        .input-wrap input::placeholder{
+            color:#98a2b3;
+        }
+
+        .toggle-password{
+            position:absolute;
+            right:8px;
+            top:50%;
+            transform:translateY(-50%);
+            width:34px;
+            height:34px;
+            border:0;
+            border-radius:8px;
+            background:transparent;
+            color:#667085;
+            cursor:pointer;
+        }
+
+        .toggle-password:hover{
+            background:#eef3f8;
+            color:var(--primary);
+        }
+
+        .toggle-password i{
+            position:static;
+            transform:none;
+        }
+
+        .form-row{
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:12px;
+            margin:4px 0 18px;
+            font-size:13px;
+        }
+
+        .check{
+            display:flex;
+            align-items:center;
+            gap:8px;
+            color:#475467;
+            user-select:none;
+        }
+
+        .check input{
+            width:16px;
+            height:16px;
+            accent-color:var(--primary);
+        }
+
+        .forgot-link,
+        .register-link{
+            color:var(--primary);
+            text-decoration:none;
+            font-weight:800;
+        }
+
+        .forgot-link:hover,
+        .register-link:hover{
+            color:var(--primary-dark);
+            text-decoration:underline;
+        }
+
+        .submit-btn{
+            width:100%;
+            min-height:48px;
+            border:none;
+            border-radius:8px;
+            background:var(--primary);
+            color:white;
+            cursor:pointer;
+            font-size:15px;
+            font-weight:800;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            gap:9px;
+            transition:background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .submit-btn:hover{
+            background:var(--primary-dark);
+            transform:translateY(-1px);
+            box-shadow:0 12px 24px rgba(37,99,235,0.24);
+        }
+
+        .meta-strip{
+            display:grid;
+            grid-template-columns:repeat(2, minmax(0,1fr));
+            gap:10px;
+            margin-top:16px;
+        }
+
+        .meta-card{
+            padding:11px 12px;
+            border:1px solid var(--line);
+            border-radius:8px;
+            background:var(--soft);
+            color:#475467;
+            font-size:12px;
+            line-height:17px;
+            display:flex;
+            align-items:flex-start;
+            gap:9px;
+        }
+
+        .meta-card i{
+            color:var(--green);
+            margin-top:2px;
+        }
+
+        .register-box{
+            margin-top:22px;
+            padding-top:18px;
+            border-top:1px solid #edf1f6;
+            text-align:center;
+            color:var(--muted);
+            font-size:14px;
+        }
+
+        .mobile-note{
+            display:none;
+            margin-top:7px;
+            color:var(--danger);
+            font-size:12px;
+            font-weight:700;
+        }
+
+        .mobile-note.show{
+            display:block;
+        }
+
+        .login-message{
+            margin:0 0 14px;
+            padding:12px 14px;
+            border-radius:8px;
+            background:#fef2f2;
+            color:#b91c1c;
+            border:1px solid #fecaca;
+            font-size:13px;
+            font-weight:800;
+        }
+
+        .login-message.success{
+            background:#ecfdf5;
+            color:#065f46;
+            border-color:#a7f3d0;
+        }
+
+        @media(max-width:900px){
+            body{
+                align-items:flex-start;
+                padding:16px;
+            }
+
+            .login-shell{
+                grid-template-columns:1fr;
+                min-height:auto;
+            }
+
+            .brand-panel{
+                min-height:330px;
+            }
+
+            .brand-copy h1{
+                font-size:34px;
+                line-height:42px;
+            }
+        }
+
+        @media(max-width:560px){
+            body{
+                padding:0;
+            }
+
+            .login-shell{
+                border-radius:0;
+                min-height:100vh;
+            }
+
+            .brand-panel,
+            .form-panel{
+                padding:24px;
+            }
+
+            .feature-grid,
+            .meta-strip{
+                grid-template-columns:1fr;
+            }
+
+            .form-row{
+                align-items:flex-start;
+                flex-direction:column;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<main class="login-shell">
+    <section class="brand-panel">
+        <div class="brand-mark">
+            <div class="logo">
+                <i class="fa-solid fa-right-to-bracket"></i>
+            </div>
+            <div>
+                <strong>Login Page</strong>
+                <span>Reports, data, and secure access</span>
+            </div>
+        </div>
+
+        <div class="brand-copy">
+            <h1>Welcome back</h1>
+            <p>Sign in to continue your dashboard, SQL tools, student records, and Excel report workflow from one secure place.</p>
+        </div>
+
+        <div class="feature-grid">
+            <div class="feature">
+                <i class="fa-solid fa-shield-halved"></i>
+                <span>OTP protected login</span>
+            </div>
+            <div class="feature">
+                <i class="fa-solid fa-file-excel"></i>
+                <span>Excel report exports</span>
+            </div>
+            <div class="feature">
+                <i class="fa-solid fa-server"></i>
+                <span>SQL Server tools</span>
+            </div>
+            <div class="feature">
+                <i class="fa-solid fa-user-gear"></i>
+                <span>Profile management</span>
+            </div>
+        </div>
+    </section>
+
+    <section class="form-panel">
+        <div class="form-head">
+            <div class="badge">
+                <i class="fa-solid fa-lock"></i>
+                Secure Login
+            </div>
+            <h2>Sign in</h2>
+            <p>Use your username and password to receive OTP verification on your registered email.</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="login-message {{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <form action="/login" method="POST" id="loginForm">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+            <div class="field">
+                <label for="username">Username</label>
+                <div class="input-wrap">
+                    <i class="fa-solid fa-user"></i>
+                    <input id="username" type="text" name="username" placeholder="Enter your username" autocomplete="username" required>
+                </div>
+            </div>
+
+            <div class="field">
+                <label for="password">Password</label>
+                <div class="input-wrap">
+                    <i class="fa-solid fa-key"></i>
+                    <input id="password" type="password" name="password" placeholder="Enter your password" autocomplete="current-password" required>
+                    <button class="toggle-password" type="button" onclick="togglePassword()" aria-label="Show or hide password">
+                        <i id="passwordIcon" class="fa-solid fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <label class="check">
+                    <input id="rememberDevice" type="checkbox" name="remember">
+                    <span>Remember this device</span>
+                </label>
+                <a class="forgot-link" href="/forgot_password">Forgot password?</a>
+            </div>
+
+            <button class="submit-btn" type="submit">
+                <i class="fa-solid fa-right-to-bracket"></i>
+                Login now
+            </button>
+        </form>
+
+        <div class="meta-strip">
+            <div class="meta-card">
+                <i class="fa-solid fa-circle-check"></i>
+                <span>OTP is sent to your registered email after password check.</span>
+            </div>
+            <div class="meta-card">
+                <i class="fa-solid fa-clock"></i>
+                <span>Your session opens only after successful verification.</span>
+            </div>
+        </div>
+
+        <div class="register-box">
+            New user?
+            <a class="register-link" href="/register">Create an account</a>
+        </div>
+    </section>
+</main>
+
+<script>
+    const loginForm = document.getElementById("loginForm");
+    const usernameInput = document.getElementById("username");
+    const rememberDevice = document.getElementById("rememberDevice");
+
+    function togglePassword(){
+        const passwordInput = document.getElementById("password");
+        const passwordIcon = document.getElementById("passwordIcon");
+        const isPassword = passwordInput.type === "password";
+
+        passwordInput.type = isPassword ? "text" : "password";
+        passwordIcon.className = isPassword ? "fa-solid fa-eye-slash" : "fa-solid fa-eye";
+    }
+
+    (function loadRememberedLogin(){
+        if(localStorage.getItem("remember_device") !== "1"){
+            return;
+        }
+
+        if(usernameInput){
+            usernameInput.value = localStorage.getItem("remember_username") || "";
+        }
+
+        if(rememberDevice){
+            rememberDevice.checked = true;
+        }
+    })();
+
+    if(loginForm){
+        loginForm.addEventListener("submit", function(){
+            if(!rememberDevice || !rememberDevice.checked){
+                localStorage.removeItem("remember_device");
+                localStorage.removeItem("remember_username");
+                return;
+            }
+
+            localStorage.setItem("remember_device", "1");
+            localStorage.setItem("remember_username", usernameInput ? usernameInput.value.trim() : "");
+        });
+    }
+</script>
+
+</body>
+</html>

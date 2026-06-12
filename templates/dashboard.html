@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='app_theme.css') }}">
+</head>
+<body>
+<main class="app-shell wide">
+    <aside class="side-panel">
+        <div class="brand-mark">
+            <div class="brand-logo"><i class="fa-solid fa-layer-group"></i></div>
+            <div>
+                <strong>Dashboard</strong>
+                <span>Daily workspace</span>
+            </div>
+        </div>
+
+        <div class="side-copy">
+            <h1>{{ wish }}, {{ username or 'User' }}</h1>
+            <p>Access student records, profile settings, SQL reports, and export tools from one clean control center.</p>
+        </div>
+
+        <div class="feature-list">
+            <div class="feature-pill"><i class="fa-solid fa-calendar-day"></i>{{ current_date }}</div>
+            <div class="feature-pill"><i class="fa-solid fa-clock"></i><span id="clock">--:--:--</span></div>
+            <div class="feature-pill"><i class="fa-solid fa-shield-halved"></i>{{ role|title }} access</div>
+            {% if stats.last_login %}
+            <div class="feature-pill"><i class="fa-solid fa-right-to-bracket"></i>Last login {{ stats.last_login }}</div>
+            {% endif %}
+        </div>
+    </aside>
+
+    <section class="content-panel">
+        <div class="page-head">
+            <div>
+                <div class="badge"><i class="fa-solid fa-bolt"></i> Quick Actions</div>
+                <h2>Choose what you want to manage</h2>
+                <p>Common work areas are grouped here so you can move fast without hunting through menus.</p>
+            </div>
+        </div>
+
+        <div class="grid" style="margin-bottom:18px;">
+            <div class="card white"><h3>{{ stats.students }}</h3><p>Total students</p></div>
+            <div class="card white"><h3>{{ stats.users }}</h3><p>Total users</p></div>
+            <div class="card white"><h3>{{ stats.queries }}</h3><p>Saved queries</p></div>
+            <div class="card white"><h3>{{ stats.reports }}</h3><p>Downloaded reports</p></div>
+        </div>
+
+        <div class="grid">
+            <a class="card white" href="/profile">
+                <h3><i class="fa-solid fa-user"></i> My Profile</h3>
+                <p>View your profile photo and account options.</p>
+            </a>
+            <a class="card white" href="/add_student">
+                <h3><i class="fa-solid fa-user-plus"></i> Add Student</h3>
+                <p>Create a new student record with name, age, and course.</p>
+            </a>
+            <a class="card white" href="/view_students">
+                <h3><i class="fa-solid fa-table-list"></i> View Students</h3>
+                <p>Browse records and remove entries when needed.</p>
+            </a>
+            <a class="card white" href="/sql">
+                <h3><i class="fa-solid fa-database"></i> SQL Runner</h3>
+                <p>Run queries, generate SIDBI reports, and export Excel files.</p>
+            </a>
+            <a class="card white" href="/settings">
+                <h3><i class="fa-solid fa-gear"></i> Settings</h3>
+                <p>Update profile, security, and appearance preferences.</p>
+            </a>
+            <a class="card white" href="/activity_logs">
+                <h3><i class="fa-solid fa-clock-rotate-left"></i> Activity Logs</h3>
+                <p>Review login, query, export, and account actions.</p>
+            </a>
+            <a class="card white" href="/report_history">
+                <h3><i class="fa-solid fa-file-excel"></i> Report History</h3>
+                <p>Check generated report downloads and row counts.</p>
+            </a>
+            {% if role == 'admin' %}
+            <a class="card white" href="/admin/users">
+                <h3><i class="fa-solid fa-users-gear"></i> User Management</h3>
+                <p>Manage roles, active status, and failed attempts.</p>
+            </a>
+            {% endif %}
+            <a class="card white" href="/logout">
+                <h3><i class="fa-solid fa-right-from-bracket"></i> Logout</h3>
+                <p>End the current session safely.</p>
+            </a>
+        </div>
+
+        <div class="card white" style="margin-top:18px;">
+            <h3><i class="fa-solid fa-timeline"></i> Recent Activity</h3>
+            <div class="table-wrap" style="max-height:220px; margin-top:10px;">
+                <table>
+                    <tr><th>Action</th><th>Details</th><th>Time</th></tr>
+                    {% for log in stats.recent_logs %}
+                    <tr>
+                        <td>{{ log[0] }}</td>
+                        <td>{{ log[1] or '' }}</td>
+                        <td>{{ log[2] }}</td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="3">No activity yet.</td></tr>
+                    {% endfor %}
+                </table>
+            </div>
+        </div>
+    </section>
+</main>
+
+<script>
+function updateClock(){
+    const clock = document.getElementById("clock");
+    const now = new Date();
+    clock.innerText = now.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit"
+    });
+}
+updateClock();
+setInterval(updateClock, 1000);
+</script>
+
+<button class="global-back-button" type="button" onclick="goBack()">
+    <span aria-hidden="true">&larr;</span>
+    Back
+</button>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+<div class="global-flash-stack" aria-live="polite">
+    {% for category, message in messages %}
+    <div class="global-flash {{ category }}">{{ message }}</div>
+    {% endfor %}
+</div>
+{% endif %}
+{% endwith %}
+
+{% if session.get('logged_in') %}
+<div class="global-quick-panel" aria-label="Quick tools">
+    <div class="global-clock" id="globalClock">--:--</div>
+    <button class="global-tool-button" type="button" onclick="goDashboard()">Home</button>
+    <button class="global-tool-button" type="button" onclick="goSqlPage()">SQL</button>
+    <button class="global-tool-button" type="button" onclick="scrollToTop()">Top</button>
+    <button class="global-tool-button" type="button" onclick="togglePageFocus()">Focus</button>
+</div>
+{% endif %}
+
+<style>
+    /* ===== Global Appearance (applies across pages) ===== */
+    :root{
+        --app-font-scale: 1;
+        --app-brightness: 1;
+    }
+
+    body{
+        font-size: calc(16px * var(--app-font-scale));
+        filter: brightness(var(--app-brightness));
+    }
+
+    .global-back-button {
+        position: fixed;
+        top: 18px;
+        left: 18px;
+        z-index: 9999;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        width: auto;
+        min-width: 88px;
+        padding: 10px 14px;
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        border-radius: 8px;
+        background: rgba(18, 25, 38, 0.78);
+        color: #fff;
+        font: 600 14px 'Segoe UI', Arial, sans-serif;
+        line-height: 1;
+        text-decoration: none;
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+        backdrop-filter: blur(10px);
+        cursor: pointer;
+        transition: background 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
+        will-change: transform;
+    }
+
+    .global-back-button:hover {
+        background: #ff7a00;
+        transform: translateY(-1px);
+    }
+
+    .global-back-button span {
+        font-size: 13px;
+    }
+
+    .global-quick-panel {
+        position: fixed;
+        top: 18px;
+        right: 18px;
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.20);
+        border-radius: 8px;
+        background: rgba(18, 25, 38, 0.78);
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+        backdrop-filter: blur(12px);
+        transition: box-shadow 0.25s ease, border-color 0.25s ease;
+    }
+
+    .global-flash-stack {
+        position: fixed;
+        top: 74px;
+        right: 18px;
+        z-index: 10000;
+        display: grid;
+        gap: 8px;
+        width: min(380px, calc(100vw - 36px));
+    }
+
+    .global-flash {
+        padding: 12px 14px;
+        border: 1px solid rgba(255, 255, 255, 0.24);
+        border-radius: 8px;
+        background: rgba(18, 25, 38, 0.92);
+        color: #fff;
+        font: 700 13px 'Segoe UI', Arial, sans-serif;
+        line-height: 1.35;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.28);
+        backdrop-filter: blur(12px);
+    }
+
+    .global-flash.success {
+        background: rgba(5, 150, 105, 0.95);
+    }
+
+    .global-flash.error,
+    .global-flash.danger {
+        background: rgba(220, 38, 38, 0.95);
+    }
+
+    .global-flash.warning {
+        background: rgba(217, 119, 6, 0.95);
+    }
+
+    .global-clock {
+        min-width: 62px;
+        color: #fff;
+        font: 700 13px 'Segoe UI', Arial, sans-serif;
+        text-align: center;
+        letter-spacing: 0;
+    }
+
+    .global-tool-button {
+        width: auto;
+        min-width: 48px;
+        padding: 9px 10px;
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+        font: 700 12px 'Segoe UI', Arial, sans-serif;
+        line-height: 1;
+        cursor: pointer;
+        transition: background 0.2s, transform 0.2s;
+    }
+
+    .global-tool-button:hover {
+        background: #2563eb;
+        transform: translateY(-1px);
+    }
+
+    body.global-focus-mode::before {
+        background: rgba(0, 0, 0, 0.78) !important;
+    }
+
+    body.global-focus-mode .main-container {
+        box-shadow: 0 18px 70px rgba(0, 176, 255, 0.28) !important;
+    }
+
+    @media (max-width: 600px) {
+        .global-back-button {
+            top: 10px;
+            left: 10px;
+            min-width: 78px;
+            padding: 9px 11px;
+            font-size: 13px;
+        }
+
+        .global-quick-panel {
+            top: auto;
+            right: 10px;
+            bottom: 10px;
+            left: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .global-flash-stack {
+            top: 58px;
+            right: 10px;
+            left: 10px;
+            width: auto;
+        }
+
+        .global-clock {
+            width: 100%;
+        }
+    }
+</style>
+
+<script>
+    function goBack() {
+        if (window.history.length > 1) {
+            window.history.back();
+            return;
+        }
+
+        window.location.href = "/dashboard";
+    }
+
+    function goDashboard() {
+        window.location.href = "/dashboard";
+    }
+
+    function goSqlPage() {
+        window.location.href = "/sql";
+    }
+
+    function scrollToTop() {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+
+        const scrollBox = document.querySelector(".right");
+        if (scrollBox) {
+            scrollBox.scrollTo({ top: 0, behavior: "smooth" });
+        }
+    }
+
+    function togglePageFocus() {
+        document.body.classList.toggle("global-focus-mode");
+        localStorage.setItem(
+            "globalFocusMode",
+            document.body.classList.contains("global-focus-mode") ? "1" : "0"
+        );
+    }
+
+    function updateGlobalClock() {
+        const clock = document.getElementById("globalClock");
+        if (!clock) {
+            return;
+        }
+
+        const now = new Date();
+        clock.innerText = now.toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit"
+        });
+    }
+
+    // ===== Global appearance apply from localStorage =====
+    (function applySavedAppearance() {
+        const savedFont = localStorage.getItem("settings_font_percent");
+        const savedBrightness = localStorage.getItem("settings_brightness_percent");
+
+        const initialFont = savedFont ? Number(savedFont) : 100;
+        const initialBrightness = savedBrightness ? Number(savedBrightness) : 100;
+
+        const fontScale = initialFont / 100;
+        const brightness = initialBrightness / 100;
+
+        document.documentElement.style.setProperty("--app-font-scale", String(fontScale));
+        document.documentElement.style.setProperty("--app-brightness", String(brightness));
+
+        // Settings page ka UI label update yahan zaroori nahi (sirf apply)
+    })();
+
+    if (localStorage.getItem("globalFocusMode") === "1") {
+        document.body.classList.add("global-focus-mode");
+    }
+
+    updateGlobalClock();
+    setInterval(updateGlobalClock, 30000);
+</script>
+
+</body>
+</html>
