@@ -1,0 +1,164 @@
+USE [Testing]
+GO
+
+/****** Object:  StoredProcedure [dbo].[usp_SIDBI_Prayaas_TopSheet]    Script Date: 25-05-2026 8.34.35 AM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE PROCEDURE [dbo].[usp_SIDBI_Prayaas_TopSheet]
+    @TableName SYSNAME
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @FullTableName NVARCHAR(300);
+    DECLARE @Sql NVARCHAR(MAX);
+
+    SET @FullTableName =
+        CASE
+            WHEN PARSENAME(@TableName, 2) IS NULL
+                THEN QUOTENAME('dbo') + '.' + QUOTENAME(@TableName)
+            ELSE QUOTENAME(PARSENAME(@TableName, 2)) + '.' + QUOTENAME(PARSENAME(@TableName, 1))
+        END;
+
+    CREATE TABLE #raw (
+        DPDFlag VARCHAR(10),
+        max_dpd INT,
+        ClientLoanID VARCHAR(100),
+        PrincipalInArrears FLOAT,
+        PrincipalOutstanding FLOAT
+    );
+
+    SET @Sql = N'
+        INSERT INTO #raw
+        SELECT
+            DPDFlag,
+            max_dpd,
+            ClientLoanID,
+            PrincipalInArrears,
+            PrincipalOutstanding
+        FROM ' + @FullTableName + N'
+        WHERE SUBSTRING(ClientLoanID, 16, 2) IN (
+            ''W6'',''5X'',''H8'',''6X'',''6Y'',''Q1'',''Q2'',''Q3'',''Q4'',''Q5'',''Q6'',
+            ''6D'',''6E'',''6F'',''6G'',''6H'',''6I'',''6J''
+        );
+    ';
+
+    EXEC sys.sp_executesql @Sql;
+
+    ;WITH base_28 AS (
+        SELECT
+            CASE
+                WHEN DPDFlag = '0' AND max_dpd = 0 THEN '0 DPD'
+                WHEN DPDFlag = '0' AND max_dpd BETWEEN 1 AND 14 THEN '1-14 DPD'
+                WHEN DPDFlag = '0' AND max_dpd BETWEEN 15 AND 28 THEN '15-28 DPD'
+                WHEN DPDFlag = '1' AND max_dpd BETWEEN 1 AND 28 THEN 'Stage-3 1-28 DPD'
+                WHEN DPDFlag = '1' AND max_dpd BETWEEN 29 AND 56 THEN 'Stage-3 29-56 DPD'
+                WHEN DPDFlag = '1' AND max_dpd BETWEEN 57 AND 84 THEN 'Stage-3 57-84 DPD'
+                WHEN DPDFlag = '1' AND max_dpd > 84 THEN 'Stage-3 >84 DPD'
+            END AS Bucket,
+            LEFT(ClientLoanID, 14) AS alc_id,
+            ClientLoanID,
+            PrincipalInArrears,
+            PrincipalOutstanding
+        FROM #raw
+    ),
+    agg_28 AS (
+        SELECT Bucket, COUNT(DISTINCT alc_id) Alc, COUNT(ClientLoanID) Loan,
+               SUM(CASE WHEN PrincipalInArrears > 0 THEN PrincipalInArrears ELSE 0 END) Arrear,
+               SUM(PrincipalOutstanding) Outstanding
+        FROM base_28
+        WHERE Bucket IS NOT NULL
+        GROUP BY Bucket
+
+        UNION ALL
+
+        SELECT 'Grand Total', COUNT(DISTINCT alc_id), COUNT(ClientLoanID),
+               SUM(CASE WHEN PrincipalInArrears > 0 THEN PrincipalInArrears ELSE 0 END),
+               SUM(PrincipalOutstanding)
+        FROM base_28
+    ),
+    final_28 AS (
+        SELECT ROW_NUMBER() OVER (
+            ORDER BY CASE Bucket
+                WHEN '0 DPD' THEN 1
+                WHEN '1-14 DPD' THEN 2
+                WHEN '15-28 DPD' THEN 3
+                WHEN 'Stage-3 1-28 DPD' THEN 4
+                WHEN 'Stage-3 29-56 DPD' THEN 5
+                WHEN 'Stage-3 57-84 DPD' THEN 6
+                WHEN 'Stage-3 >84 DPD' THEN 7
+                WHEN 'Grand Total' THEN 8
+            END
+        ) rn, Bucket, Alc, Loan, Arrear, Outstanding
+        FROM agg_28
+    ),
+    base_30 AS (
+        SELECT
+            CASE
+                WHEN DPDFlag = '0' AND max_dpd = 0 THEN '0 DPD'
+                WHEN DPDFlag = '0' AND max_dpd BETWEEN 1 AND 14 THEN '1-14 DPD'
+                WHEN DPDFlag = '0' AND max_dpd BETWEEN 15 AND 28 THEN '15-28 DPD'
+                WHEN DPDFlag = '1' AND max_dpd BETWEEN 1 AND 30 THEN 'Stage-3 1-30 DPD'
+                WHEN DPDFlag = '1' AND max_dpd BETWEEN 31 AND 60 THEN 'Stage-3 31-60 DPD'
+                WHEN DPDFlag = '1' AND max_dpd BETWEEN 61 AND 90 THEN 'Stage-3 61-90 DPD'
+                WHEN DPDFlag = '1' AND max_dpd > 90 THEN 'Stage-3 >90 DPD'
+            END AS Bucket,
+            LEFT(ClientLoanID, 14) AS alc_id,
+            ClientLoanID,
+            PrincipalInArrears,
+            PrincipalOutstanding
+        FROM #raw
+    ),
+    agg_30 AS (
+        SELECT Bucket, COUNT(DISTINCT alc_id) Alc, COUNT(ClientLoanID) Loan,
+               SUM(CASE WHEN PrincipalInArrears > 0 THEN PrincipalInArrears ELSE 0 END) Arrear,
+               SUM(PrincipalOutstanding) Outstanding
+        FROM base_30
+        WHERE Bucket IS NOT NULL
+        GROUP BY Bucket
+
+        UNION ALL
+
+        SELECT 'Grand Total', COUNT(DISTINCT alc_id), COUNT(ClientLoanID),
+               SUM(CASE WHEN PrincipalInArrears > 0 THEN PrincipalInArrears ELSE 0 END),
+               SUM(PrincipalOutstanding)
+        FROM base_30
+    ),
+    final_30 AS (
+        SELECT ROW_NUMBER() OVER (
+            ORDER BY CASE Bucket
+                WHEN '0 DPD' THEN 1
+                WHEN '1-14 DPD' THEN 2
+                WHEN '15-28 DPD' THEN 3
+                WHEN 'Stage-3 1-30 DPD' THEN 4
+                WHEN 'Stage-3 31-60 DPD' THEN 5
+                WHEN 'Stage-3 61-90 DPD' THEN 6
+                WHEN 'Stage-3 >90 DPD' THEN 7
+                WHEN 'Grand Total' THEN 8
+            END
+        ) rn, Bucket, Alc, Loan, Arrear, Outstanding
+        FROM agg_30
+    )
+    SELECT
+        f28.Bucket AS [Bucket],
+        FORMAT(f28.Alc, 'N0', 'en-IN') AS [Alc],
+        FORMAT(f28.Loan, 'N0', 'en-IN') AS [Loan],
+        FORMAT(f28.Arrear, 'N0', 'en-IN') AS [Arrear],
+        FORMAT(f28.Outstanding, 'N0', 'en-IN') AS [Outstanding],
+        '' AS [ ],
+        f30.Bucket AS [Bucket],
+        FORMAT(f30.Alc, 'N0', 'en-IN') AS [Alc],
+        FORMAT(f30.Loan, 'N0', 'en-IN') AS [Loan],
+        FORMAT(f30.Arrear, 'N0', 'en-IN') AS [Arrear],
+        FORMAT(f30.Outstanding, 'N0', 'en-IN') AS [Outstanding]
+    FROM final_28 f28
+    FULL OUTER JOIN final_30 f30 ON f28.rn = f30.rn
+    ORDER BY COALESCE(f28.rn, f30.rn);
+END;
+GO
+
+

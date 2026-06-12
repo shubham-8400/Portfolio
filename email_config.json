@@ -1,0 +1,8 @@
+{
+  "host": "smtp.gmail.com",
+  "port": 587,
+  "username": "Hoogledrive77@gmail.com",
+  "password": "ranjbevorbcosazj",
+  "from": "my program",
+  "use_tls": true
+}
